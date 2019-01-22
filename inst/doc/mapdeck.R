@@ -43,9 +43,7 @@ mapdeck_tokens()
 ## ------------------------------------------------------------------------
 #  mapdeck(
 #    token = key
-#    , location = c(145, -37.9)
-#    , zoom = 8
-#    , style = "mapbox://styles/mapbox/dark-v9"
+#    , style = mapdeck_style("dark")
 #    , pitch = 35
 #    ) %>%
 #  	add_geojson(
@@ -59,7 +57,7 @@ mapdeck_tokens()
 #  'examples/3d-heatmap/heatmap-data.csv'
 #  ))
 #  
-#  mapdeck( token = key, style = 'mapbox://styles/mapbox/dark-v9', pitch = 45 ) %>%
+#  mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) %>%
 #  add_grid(
 #    data = df
 #    , lat = "lat"
@@ -75,7 +73,7 @@ mapdeck_tokens()
 #  flights$id <- seq_len(nrow(flights))
 #  flights$stroke <- sample(1:3, size = nrow(flights), replace = T)
 #  
-#  mapdeck( token = key, style = 'mapbox://styles/mapbox/dark-v9', pitch = 45 ) %>%
+#  mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) %>%
 #    add_line(
 #      data = flights
 #      , layer_id = "line_layer"
@@ -88,8 +86,7 @@ mapdeck_tokens()
 ## ------------------------------------------------------------------------
 #  mapdeck(
 #    token = key
-#    , style = 'mapbox://styles/mapbox/dark-v9'
-#    , location = c(145, -37.8)
+#    , style = mapdeck_style("dark")
 #    , zoom = 10) %>%
 #    add_path(
 #      data = roads
@@ -102,7 +99,7 @@ mapdeck_tokens()
 #  df <- capitals
 #  df$z <- sample(10000:10000000, size = nrow(df))
 #  
-#  mapdeck(token = key, style = 'mapbox://styles/mapbox/dark-v9') %>%
+#  mapdeck(token = key, style = mapdeck_style("dark")) %>%
 #  add_pointcloud(
 #    data = df
 #    , lon = 'lon'
@@ -118,7 +115,7 @@ mapdeck_tokens()
 #  
 #  sf <- geojson_sf("https://symbolixau.github.io/data/geojson/SA2_2016_VIC.json")
 #  
-#  mapdeck(token = key, style = 'mapbox://styles/mapbox/dark-v9') %>%
+#  mapdeck(token = key, style = mapdeck_style("dark")) %>%
 #    add_polygon(
 #      data = sf
 #      , layer = "polygon_layer"
@@ -127,7 +124,7 @@ mapdeck_tokens()
 
 ## ------------------------------------------------------------------------
 #  
-#  mapdeck( token = key, style = 'mapbox://styles/mapbox/dark-v9', pitch = 45 ) %>%
+#  mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) %>%
 #  add_scatterplot(
 #    data = capitals
 #    , lat = "lat"
@@ -179,7 +176,7 @@ mapdeck_tokens()
 #  
 #  mapdeck(
 #    token = key
-#    , style = 'mapbox://styles/mapbox/dark-v9'
+#    , style = mapdeck_style("dark")
 #    , pitch = 35
 #    ) %>%
 #    add_arc(
@@ -227,7 +224,7 @@ mapdeck_tokens()
 #  )
 #  server <- function(input, output) {
 #  	
-#  	set_token('abc') ## set your access token
+#  	#set_token('abc') ## set your access token
 #  	
 #  	origin <- capitals[capitals$country == "Australia", ]
 #  	destination <- capitals[capitals$country != "Australia", ]
@@ -266,6 +263,7 @@ mapdeck_tokens()
 #  				, origin = c("lon.x", "lat.x")
 #  				, destination = c("lon.y", "lat.y")
 #  				, layer_id = "myArcLayer"
+#  				, id = "country.x"
 #  				, stroke_width = 4
 #  			)
 #  	})
