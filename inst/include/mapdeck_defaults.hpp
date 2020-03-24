@@ -6,7 +6,16 @@
 namespace mapdeck {
 namespace defaults {
 
-  // dont' necessarily need polyline anymore
+	inline Rcpp::NumericVector default_arc_height( int n ) {
+		Rcpp::NumericVector nv(n, 1.0);
+		return nv;
+	}
+
+	inline Rcpp::NumericVector default_arc_tilt( int n ) {
+		Rcpp::NumericVector nv(n, 0.0);
+		return nv;
+	}
+
 	inline Rcpp::StringVector default_polyline( int n ) {
 		Rcpp::StringVector sv(n);
 		return sv;
@@ -22,13 +31,13 @@ namespace defaults {
 		return nv;
 	}
 
-	inline Rcpp::IntegerVector default_elevation(int n) {
+	inline Rcpp::IntegerVector default_elevation( int n ) {
 		Rcpp::IntegerVector iv(n, 0.0);
 		return iv;
 	}
 
-	inline Rcpp::IntegerVector default_radius(int n) {
-		Rcpp::IntegerVector iv(n, 1000);
+	inline Rcpp::IntegerVector default_radius( int n ) {
+		Rcpp::IntegerVector iv(n, 1.0);
 		return iv;
 	}
 
@@ -81,6 +90,11 @@ namespace defaults {
 		Rcpp::NumericVector nv(n, 32.0);
 		return nv;
 	}
+
+  inline Rcpp::NumericVector default_dash( int n ) {
+  	Rcpp::NumericVector nv(n, 0.0);
+  	return nv;
+  }
 
 } // namespace defaults
 } // namespace mapdeck

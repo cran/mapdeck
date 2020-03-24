@@ -4,17 +4,36 @@
 \alias{add_hexagon}
 \title{Add hexagon}
 \usage{
-add_hexagon(map, data = get_map_data(map), polyline = NULL,
-  lon = NULL, lat = NULL, layer_id = NULL, radius = 1000,
-  elevation_scale = 1, auto_highlight = FALSE,
-  highlight_colour = "#AAFFFFFF", colour_range = NULL,
-  update_view = TRUE, focus_layer = FALSE)
+add_hexagon(
+  map,
+  data = get_map_data(map),
+  polyline = NULL,
+  lon = NULL,
+  lat = NULL,
+  layer_id = NULL,
+  radius = 1000,
+  elevation = NULL,
+  elevation_function = c("sum", "mean", "min", "max"),
+  colour = NULL,
+  colour_function = c("sum", "mean", "min", "max"),
+  legend = FALSE,
+  legend_options = NULL,
+  elevation_scale = 1,
+  auto_highlight = FALSE,
+  highlight_colour = "#AAFFFFFF",
+  colour_range = NULL,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6,
+  transitions = NULL,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{polyline}{column of \code{data} containing the polylines}
 
@@ -26,9 +45,23 @@ Web Mercator Projection}
 distinguish between shape layers of the same type. Layers with the same id are likely
 to conflict and not plot correctly}
 
-\item{radius}{in metres}
+\item{radius}{in metres. Default 1000}
 
-\item{elevation_scale}{value to sacle the elevations of the hexagons}
+\item{elevation}{column containing the elevation of the value.}
+
+\item{elevation_function}{one of 'min', 'mean', 'max', 'sum'.
+IF supplied it specifies how the elevation values are calcualted. Defaults to sum.}
+
+\item{colour}{column containing numeric values to colour by.}
+
+\item{colour_function}{one of 'min', 'mean', 'max', 'sum'.
+If supplied it specifies how the colour values are calculated. Defaults to sum.}
+
+\item{legend}{logical indicating if a legend should be displayed}
+
+\item{legend_options}{A list of options for controlling the legend.}
+
+\item{elevation_scale}{value to sacle the elevations of the hexagons. Default 1}
 
 \item{auto_highlight}{logical indicating if the shape under the mouse should auto-highlight}
 
@@ -39,6 +72,14 @@ to conflict and not plot correctly}
 \item{update_view}{logical indicating if the map should update the bounds to include this layer}
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
+
+\item{digits}{number of digits for rounding coordinates}
+
+\item{transitions}{list specifying the duration of transitions.}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
 The Hexagon Layer renders a hexagon heatmap based on an array of points.
@@ -48,6 +89,23 @@ The color and height of the hexagon is scaled by number of points it contains.
 \details{
 \code{add_hexagon} supports POINT and MULTIPOINT sf objects
 }
+\section{transitions}{
+
+
+The transitions argument lets you specify the time it will take for the shapes to transition
+from one state to the next. Only works in an interactive environment (Shiny)
+and on WebGL-2 supported browsers and hardware.
+
+The time is in milliseconds
+
+Available transitions for hexagon
+
+list(
+elevation = 0
+colour = 0
+)
+}
+
 \section{data}{
 
 
@@ -62,6 +120,7 @@ where \code{"your_column"} is the name of the column you're activating. See \cod
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 df <- read.csv(paste0(
 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/'
@@ -70,7 +129,7 @@ df <- read.csv(paste0(
 
 df <- df[!is.na(df$lng), ]
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
 add_hexagon(
   data = df
   , lat = "lat"
@@ -79,13 +138,58 @@ add_hexagon(
   , elevation_scale = 100
 )
 
-library( sf )
-sf <- sf::st_as_sf( df, coords = c("lng", "lat"))
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+library(sfheaders)
+sf <- sfheaders::sf_point( df, x = "lng", y = "lat" )
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_hexagon(
   data = sf
   , layer_id = "hex_layer"
   , elevation_scale = 100
+)
+
+## Using elevation and colour
+df$colour <- rnorm(nrow(df))
+df$elevation <- rnorm(nrow(df))
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
+add_hexagon(
+  data = df
+  , lat = "lat"
+  , lon = "lng"
+  , layer_id = "hex_layer"
+  , elevation_scale = 100
+  , elevation = "weight"
+  , colour = "colour"
+)
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
+add_hexagon(
+  data = df
+  , lat = "lat"
+  , lon = "lng"
+  , layer_id = "hex_layer"
+  , elevation_scale = 100
+  , elevation = "weight"
+  , elevation_function = "mean"
+  , colour = "colour"
+  , colour_function = "mean"
+)
+
+## with a legend
+df$val <- sample(1:10, size = nrow(df), replace = T)
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
+add_hexagon(
+	data = df
+	, lat = "lat"
+	, lon = "lng"
+	, layer_id = "hex_layer"
+	, elevation_scale = 100
+	, legend = T
+	, legend_options = list( digits = 0 )
+	, colour_function = "mean"
+	, colour = "val"
 )
 
 }

@@ -4,7 +4,8 @@ mapdeckLineDependency <- function() {
 			name = "line",
 			version = "1.0.0",
 			src = system.file("htmlwidgets/lib/line", package = "mapdeck"),
-			script = c("line.js")
+			script = c("line.js"),
+			all_files = FALSE
 		)
 	)
 }
@@ -16,12 +17,12 @@ mapdeckLineDependency <- function() {
 #' The Line Layer renders raised lines joining pairs of source and target coordinates
 #'
 #' @inheritParams add_arc
-#' @param stroke_opacity Either a string specifying the
-#' column of \code{data} containing the stroke opacity of each shape, or a value
-#' between 0 and 255 to be applied to all the shapes
+#' @param stroke_opacity Either a string specifying the column of \code{data}
+#' containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+#' to be applied to all the shapes. Default 255. If a hex-string is used as the
+#' colour, this argument is ignored and you should include the alpha on the hex string
 #' @param stroke_colour variable or hex colour to use as the ending stroke colour.
-#' transition enabled
-#'
+#' @param stroke_width width of the line in metres
 #' @inheritSection add_arc legend
 #' @inheritSection add_arc id
 #'
@@ -47,13 +48,14 @@ mapdeckLineDependency <- function() {
 #'
 #' ## You need a valid access token from Mapbox
 #' key <- 'abc'
+#' set_token( key )
 #'
 #' url <- 'https://raw.githubusercontent.com/plotly/datasets/master/2011_february_aa_flight_paths.csv'
 #' flights <- read.csv(url)
 #' flights$id <- seq_len(nrow(flights))
 #' flights$stroke <- sample(1:3, size = nrow(flights), replace = T)
 #'
-#' mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) %>%
+#' mapdeck(style = mapdeck_style("dark"), pitch = 45 ) %>%
 #'   add_line(
 #'     data = flights
 #'     , layer_id = "line_layer"
@@ -65,20 +67,18 @@ mapdeckLineDependency <- function() {
 #'  )
 #'
 #' ## Using a 2-sfc-column sf object
-#' library(sf)
+#' library(sfheaders)
 #'
-#' sf_flights <- cbind(
-#'   sf::st_as_sf(flights, coords = c("start_lon", "start_lat"))
-#'   , sf::st_as_sf(flights[, c("end_lon","end_lat")], coords = c("end_lon", "end_lat"))
-#' )
+#' sf_flights <- sfheaders::sf_point( flights, x = "start_lon", y = "start_lat", keep = TRUE )
+#' destination <- sfheaders::sfc_point( flights, x = "end_lon", y = "end_lat" )
 #'
-#' mapdeck(
-#'   token = key
-#' ) %>%
+#' sf_flights$destination <- destination
+#'
+#' mapdeck() %>%
 #'  add_line(
 #'    data = sf_flights
 #'    , origin = 'geometry'
-#'    , destination = 'geometry.1'
+#'    , destination = 'destination'
 #'    , layer_id = 'arcs'
 #'    , stroke_colour = "airport1"
 #' )
@@ -116,7 +116,9 @@ add_line <- function(
 	legend_format = NULL,
 	update_view = TRUE,
 	focus_layer = FALSE,
-	transitions = NULL
+	digits = 6,
+	transitions = NULL,
+	brush_radius = NULL
 ) {
 
 	l <- list()
@@ -124,7 +126,7 @@ add_line <- function(
 	l[["destination"]] <- force( destination)
 	l[["stroke_colour"]] <- force( stroke_colour )
 	l[["stroke_width"]] <- force( stroke_width )
-	l[["stroke_opacity"]] <- force( stroke_opacity )
+	l[["stroke_opacity"]] <- resolve_opacity( stroke_opacity )
 	l[["tooltip"]] <- force( tooltip )
 	l[["id"]] <- force( id )
 	l[["na_colour"]] <- force(na_colour)
@@ -158,23 +160,27 @@ add_line <- function(
 
 	if ( tp == "sf" ) {
 		geometry_column <- c( "origin", "destination" )
-		shape <- rcpp_line_geojson( data, l, geometry_column )
+		shape <- rcpp_od_geojson( data, l, geometry_column, digits, "line" )
 	} else if ( tp == "df" ) {
-		geometry_column <- list( origin = c("start_lon", "start_lat"), destination = c("end_lon", "end_lat") )
-		shape <- rcpp_line_geojson_df( data, l, geometry_column )
+		geometry_column <- list( origin = c("start_lon", "start_lat","start_elev"), destination = c("end_lon", "end_lat","end_elev") )
+		shape <- rcpp_od_geojson_df( data, l, geometry_column, digits, "line" )
 	}
 	# } else if ( tp == "sfencoded" ) {
 	# 	geometry_column <- "geometry"
-	# 	shape <- rcpp_line_polyline( data, l, geometry_column )
+	# 	shape <- rcpp_od_polyline( data, l, geometry_column )
 	# }
 
 	js_transitions <- resolve_transitions( transitions, "line" )
-	shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
+	if( inherits( legend, "json" ) ) {
+		shape[["legend"]] <- legend
+	} else {
+		shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
+	}
 
 	invoke_method(
-		map, "add_line_geo", shape[["data"]], layer_id, auto_highlight,
+		map, "add_line_geo", map_type( map ), shape[["data"]], layer_id, auto_highlight,
 		highlight_colour, shape[["legend"]], bbox, update_view, focus_layer,
-		js_transitions
+		js_transitions, brush_radius
 		)
 }
 
@@ -184,6 +190,6 @@ add_line <- function(
 #' @export
 clear_line <- function( map, layer_id = NULL) {
 	layer_id <- layerId(layer_id, "line")
-	invoke_method(map, "md_layer_clear", layer_id, "line" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "line" )
 }
 

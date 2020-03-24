@@ -4,19 +4,42 @@
 \alias{add_scatterplot}
 \title{Add Scatterplot}
 \usage{
-add_scatterplot(map, data = get_map_data(map), lon = NULL,
-  lat = NULL, polyline = NULL, radius = NULL, fill_colour = NULL,
-  fill_opacity = NULL, tooltip = NULL, auto_highlight = FALSE,
-  highlight_colour = "#AAFFFFFF", layer_id = NULL, id = NULL,
-  palette = "viridis", na_colour = "#808080FF", legend = FALSE,
-  legend_options = NULL, legend_format = NULL, update_view = TRUE,
-  focus_layer = FALSE, transitions = NULL)
+add_scatterplot(
+  map,
+  data = get_map_data(map),
+  lon = NULL,
+  lat = NULL,
+  polyline = NULL,
+  radius = NULL,
+  radius_min_pixels = 1,
+  radius_max_pixels = NULL,
+  fill_colour = NULL,
+  fill_opacity = NULL,
+  stroke_colour = NULL,
+  stroke_width = NULL,
+  stroke_opacity = NULL,
+  tooltip = NULL,
+  auto_highlight = FALSE,
+  highlight_colour = "#AAFFFFFF",
+  layer_id = NULL,
+  id = NULL,
+  palette = "viridis",
+  na_colour = "#808080FF",
+  legend = FALSE,
+  legend_options = NULL,
+  legend_format = NULL,
+  digits = 6,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  transitions = NULL,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{lon}{column containing longitude values}
 
@@ -24,14 +47,33 @@ Web Mercator Projection}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
-\item{radius}{in metres}
+\item{radius}{in metres. Default 1}
+
+\item{radius_min_pixels}{the minimum radius in pixels. Can prevent circle from
+getting too small when zoomed out
+small for the given zoom level}
+
+\item{radius_max_pixels}{the maximum radius in pixels. Can prevent the circle from
+getting too big when zoomed in}
 
 \item{fill_colour}{column of \code{data} or hex colour for the fill colour.
-transition enabled}
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
-\item{fill_opacity}{value between 0 and 255. Either a string specifying the
-column of \code{data} containing the fill opacity of each shape, or a single value
-to be applied to all the shapes}
+\item{fill_opacity}{Either a string specifying the column of \code{data}
+containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+to be applied to all the shapes. Default 255. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
+
+\item{stroke_colour}{variable of \code{data} or hex colour for the stroke. If used,
+\code{elevation} is ignored.
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
+
+\item{stroke_width}{width of the stroke in meters. If used, \code{elevation} is ignored. Default 1.}
+
+\item{stroke_opacity}{Either a string specifying the column of \code{data}
+containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+to be applied to all the shapes. Default 255. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
 
 \item{tooltip}{variable of \code{data} containing text or HTML to render as a tooltip}
 
@@ -46,8 +88,10 @@ to conflict and not plot correctly}
 \item{id}{an id value in \code{data} to identify layers when interacting in Shiny apps.}
 
 \item{palette}{string or matrix. String will be one of \code{colourvalues::colour_palettes()}.
-A matrix is a 3 or 4 column numeric matrix of values between [0, 255],
-where the 4th column represents the alpha.}
+A matrix must have at least 5 rows, and 3 or 4 columns of values between [0, 255],
+where the 4th column represents the alpha. You can use a named list to specify a different
+palette for different colour options (where available),
+ e.g. list(fill_colour = "viridis", stroke_colour = "inferno")}
 
 \item{na_colour}{hex string colour to use for NA values}
 
@@ -58,11 +102,17 @@ a named list indicating which colour attributes should be included in the legend
 
 \item{legend_format}{A list containing functions to apply to legend values. See section legend}
 
+\item{digits}{number of digits for rounding coordinates}
+
 \item{update_view}{logical indicating if the map should update the bounds to include this layer}
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
 
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
 The Scatterplot Layer takes in coordinate points and renders them as circles
@@ -106,6 +156,7 @@ This should be a named list, where the names are one of
 \itemize{
   \item{css - a string of valid \code{css} for controlling the appearance of the legend}
   \item{title - a string to use for the title of the legend}
+  \item{digits - number to round the legend values to}
 }
 
 If the layer allows different fill and stroke colours, you can use different options for each. See examples in \link{add_arc}.
@@ -139,8 +190,9 @@ you are clicking on
 \donttest{
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_scatterplot(
   data = capitals
   , lat = "lat"
@@ -151,6 +203,22 @@ add_scatterplot(
   , tooltip = "capital"
 )
 
+## using legend options
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+add_scatterplot(
+  data = capitals
+  , lat = "lat"
+  , lon = "lon"
+  , radius = 100000
+  , fill_colour = "lon"
+  , stroke_colour = "lat"
+  , layer_id = "scatter_layer"
+  , tooltip = "capital"
+  , legend = T
+  , legend_options = list( digits = 5 )
+)
+
+
 df <- read.csv(paste0(
 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/',
 'examples/3d-heatmap/heatmap-data.csv'
@@ -158,22 +226,23 @@ df <- read.csv(paste0(
 
 df <- df[ !is.na(df$lng), ]
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck(style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_scatterplot(
   data = df
   , lat = "lat"
   , lon = "lng"
   , layer_id = "scatter_layer"
+  , stroke_colour = "lng"
 )
 
 ## as an sf object
-library(sf)
-sf <- sf::st_as_sf( capitals, coords = c("lon", "lat") )
+library(sfheaders)
+sf <- sfheaders::sf_point( df, x = "lng", y = "lat")
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_scatterplot(
   data = sf
-  , radius = 100000
+  , radius = 100
   , fill_colour = "country"
   , layer_id = "scatter_layer"
   , tooltip = "capital"

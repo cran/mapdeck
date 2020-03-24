@@ -4,47 +4,70 @@
 \alias{add_polygon}
 \title{Add Polygon}
 \usage{
-add_polygon(map, data = get_map_data(map), polyline = NULL,
-  stroke_colour = NULL, stroke_width = NULL, stroke_opacity = NULL,
-  fill_colour = NULL, fill_opacity = NULL, elevation = NULL,
-  tooltip = NULL, auto_highlight = FALSE,
-  highlight_colour = "#AAFFFFFF", light_settings = list(),
-  layer_id = NULL, id = NULL, palette = "viridis",
-  na_colour = "#808080FF", legend = FALSE, legend_options = NULL,
-  legend_format = NULL, update_view = TRUE, focus_layer = FALSE,
-  transitions = NULL)
+add_polygon(
+  map,
+  data = get_map_data(map),
+  polyline = NULL,
+  stroke_colour = NULL,
+  stroke_width = NULL,
+  stroke_opacity = NULL,
+  fill_colour = NULL,
+  fill_opacity = NULL,
+  elevation = NULL,
+  tooltip = NULL,
+  auto_highlight = FALSE,
+  elevation_scale = 1,
+  highlight_colour = "#AAFFFFFF",
+  light_settings = list(),
+  layer_id = NULL,
+  id = NULL,
+  palette = "viridis",
+  na_colour = "#808080FF",
+  legend = FALSE,
+  legend_options = NULL,
+  legend_format = NULL,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6,
+  transitions = NULL,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
 \item{stroke_colour}{variable of \code{data} or hex colour for the stroke. If used,
 \code{elevation} is ignored.
-transition enabled}
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
-\item{stroke_width}{width of the stroke. If used, \code{elevation} is ignored. transition enabled}
+\item{stroke_width}{width of the stroke in meters. If used, \code{elevation} is ignored. Default 1.}
 
-\item{stroke_opacity}{value between 0 and 255. Either a string specifying the
-column of \code{data} containing the stroke opacity of each shape, or a single value
-to be applied to all the shapes}
+\item{stroke_opacity}{Either a string specifying the column of \code{data}
+containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+to be applied to all the shapes. Default 255. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
 
 \item{fill_colour}{column of \code{data} or hex colour for the fill colour.
-transition enabled}
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
-\item{fill_opacity}{value between 0 and 255. Either a string specifying the
-column of \code{data} containing the fill opacity of each shape, or a single value
-to be applied to all the shapes}
+\item{fill_opacity}{Either a string specifying the column of \code{data}
+containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+to be applied to all the shapes. Default 255. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
 
 \item{elevation}{the height the polygon extrudes from the map. Only available if neither
-\code{stroke_colour} or \code{stroke_width} are supplied. transition enabled}
+\code{stroke_colour} or \code{stroke_width} are supplied. Default 0}
 
 \item{tooltip}{variable of \code{data} containing text or HTML to render as a tooltip}
 
 \item{auto_highlight}{logical indicating if the shape under the mouse should auto-highlight}
+
+\item{elevation_scale}{elevation multiplier.}
 
 \item{highlight_colour}{hex string colour to use for highlighting. Must contain the alpha component.}
 
@@ -57,8 +80,10 @@ to conflict and not plot correctly}
 \item{id}{an id value in \code{data} to identify layers when interacting in Shiny apps.}
 
 \item{palette}{string or matrix. String will be one of \code{colourvalues::colour_palettes()}.
-A matrix is a 3 or 4 column numeric matrix of values between [0, 255],
-where the 4th column represents the alpha.}
+A matrix must have at least 5 rows, and 3 or 4 columns of values between [0, 255],
+where the 4th column represents the alpha. You can use a named list to specify a different
+palette for different colour options (where available),
+ e.g. list(fill_colour = "viridis", stroke_colour = "inferno")}
 
 \item{na_colour}{hex string colour to use for NA values}
 
@@ -73,11 +98,16 @@ a named list indicating which colour attributes should be included in the legend
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
 
+\item{digits}{number of digits for rounding coordinates}
+
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
-The Polygon Layer renders filled and/or stroked polygons. If using \code{sf} objects
-only POLYGONs are supported, MULTIPOLYGONs are ignored.
+The Polygon Layer renders filled and/or stroked polygons.
 }
 \details{
 \code{add_polygon} supports POLYGON and MULTIPOLYGON sf objects
@@ -119,6 +149,7 @@ This should be a named list, where the names are one of
 \itemize{
   \item{css - a string of valid \code{css} for controlling the appearance of the legend}
   \item{title - a string to use for the title of the legend}
+  \item{digits - number to round the legend values to}
 }
 
 If the layer allows different fill and stroke colours, you can use different options for each. See examples in \link{add_arc}.
@@ -152,15 +183,14 @@ you are clicking on
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
-library(sf)
 library(geojsonsf)
 
 sf <- geojsonsf::geojson_sf("https://symbolixau.github.io/data/geojson/SA2_2016_VIC.json")
 
 mapdeck(
-  token = key
-  , style = mapdeck_style('dark')
+  style = mapdeck_style('dark')
 ) \%>\%
   add_polygon(
     data = sf
@@ -173,8 +203,7 @@ df$elevation <- sample(100:5000, size = nrow(df))
 df$info <- paste0("<b>SA2 - </b><br>",df$SA2_NAME)
 
 mapdeck(
-  token = key
-  , style = mapdeck_style('dark')
+  style = mapdeck_style('dark')
   , location = c(145, -38)
   , zoom = 8
   ) \%>\%
@@ -184,7 +213,6 @@ mapdeck(
     , layer = "polygon_layer"
     , fill_colour = "SA2_NAME"
     , elevation = "elevation"
-    , stroke_width = 200
     , tooltip = 'info'
     , legend = T
   )

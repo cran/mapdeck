@@ -4,7 +4,8 @@ mapdeckPolygonDependency <- function() {
 			name = "polygon",
 			version = "1.0.0",
 			src = system.file("htmlwidgets/lib/polygon", package = "mapdeck"),
-			script = c("polygon.js")
+			script = c("polygon.js"),
+			all_files = FALSE
 		)
 	)
 }
@@ -12,27 +13,26 @@ mapdeckPolygonDependency <- function() {
 
 #' Add Polygon
 #'
-#' The Polygon Layer renders filled and/or stroked polygons. If using \code{sf} objects
-#' only POLYGONs are supported, MULTIPOLYGONs are ignored.
+#' The Polygon Layer renders filled and/or stroked polygons.
 #'
 #' @inheritParams add_arc
+#' @inheritParams add_line
 #'
 #' @param polyline optional column of \code{data} containing the polylines, if using encoded polylines
 #' @param fill_colour column of \code{data} or hex colour for the fill colour.
-#' transition enabled
-#' @param fill_opacity value between 0 and 255. Either a string specifying the
-#' column of \code{data} containing the fill opacity of each shape, or a single value
-#' to be applied to all the shapes
+#' If using a hex colour, use either a single value, or a vector the same length as \code{data}
+#' @param fill_opacity Either a string specifying the column of \code{data}
+#' containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+#' to be applied to all the shapes. Default 255. If a hex-string is used as the
+#' colour, this argument is ignored and you should include the alpha on the hex string
 #' @param stroke_colour variable of \code{data} or hex colour for the stroke. If used,
 #' \code{elevation} is ignored.
-#' transition enabled
-#' @param stroke_opacity value between 0 and 255. Either a string specifying the
-#' column of \code{data} containing the stroke opacity of each shape, or a single value
-#' to be applied to all the shapes
-#' @param stroke_width width of the stroke. If used, \code{elevation} is ignored. transition enabled
+#' If using a hex colour, use either a single value, or a vector the same length as \code{data}
+#' @param stroke_width width of the stroke in meters. If used, \code{elevation} is ignored. Default 1.
 #' @param light_settings list of light setting parameters. See \link{light_settings}
 #' @param elevation the height the polygon extrudes from the map. Only available if neither
-#' \code{stroke_colour} or \code{stroke_width} are supplied. transition enabled
+#' \code{stroke_colour} or \code{stroke_width} are supplied. Default 0
+#' @param elevation_scale elevation multiplier.
 #'
 #' @section data:
 #'
@@ -68,15 +68,14 @@ mapdeckPolygonDependency <- function() {
 #'
 #' ## You need a valid access token from Mapbox
 #' key <- 'abc'
+#' set_token( key )
 #'
-#' library(sf)
 #' library(geojsonsf)
 #'
 #' sf <- geojsonsf::geojson_sf("https://symbolixau.github.io/data/geojson/SA2_2016_VIC.json")
 #'
 #' mapdeck(
-#'   token = key
-#'   , style = mapdeck_style('dark')
+#'   style = mapdeck_style('dark')
 #' ) %>%
 #'   add_polygon(
 #'     data = sf
@@ -89,8 +88,7 @@ mapdeckPolygonDependency <- function() {
 #' df$info <- paste0("<b>SA2 - </b><br>",df$SA2_NAME)
 #'
 #' mapdeck(
-#'   token = key
-#'   , style = mapdeck_style('dark')
+#'   style = mapdeck_style('dark')
 #'   , location = c(145, -38)
 #'   , zoom = 8
 #'   ) %>%
@@ -100,7 +98,6 @@ mapdeckPolygonDependency <- function() {
 #'     , layer = "polygon_layer"
 #'     , fill_colour = "SA2_NAME"
 #'     , elevation = "elevation"
-#'     , stroke_width = 200
 #'     , tooltip = 'info'
 #'     , legend = T
 #'   )
@@ -124,6 +121,7 @@ add_polygon <- function(
 	elevation = NULL,
 	tooltip = NULL,
 	auto_highlight = FALSE,
+	elevation_scale = 1,
 	highlight_colour = "#AAFFFFFF",
 	light_settings = list(),
 	layer_id = NULL,
@@ -135,16 +133,20 @@ add_polygon <- function(
 	legend_format = NULL,
 	update_view = TRUE,
 	focus_layer = FALSE,
-	transitions = NULL
+	digits = 6,
+	transitions = NULL,
+	brush_radius = NULL
 ) {
+
+	#if( is.null( stroke_colour )) stroke_colour <- fill_colour
 
 	l <- list()
 	l[["polyline"]] <- force( polyline )
 	l[["stroke_colour"]] <- force( stroke_colour )
 	l[["stroke_width"]] <- force( stroke_width )
-	l[["stroke_opacity"]] <- force( stroke_opacity )
+	l[["stroke_opacity"]] <- resolve_opacity( stroke_opacity )
 	l[["fill_colour"]] <- force( fill_colour )
-	l[["fill_opacity"]] <- force( fill_opacity )
+	l[["fill_opacity"]] <- resolve_opacity( fill_opacity )
 	l[["elevation"]] <- force( elevation )
 	l[["tooltip"]] <- force( tooltip )
 	l[["id"]] <- force( id )
@@ -153,11 +155,12 @@ add_polygon <- function(
 	l <- resolve_palette( l, palette )
 	l <- resolve_legend( l, legend )
 	l <- resolve_legend_options( l, legend_options )
-	l <- resolve_data( data, l, c("POLYGON","MULTIPOLYGON") )
+	l <- resolve_data( data, l, c("POLYGON") )
 
 	bbox <- init_bbox()
 	update_view <- force( update_view )
 	focus_layer <- force( focus_layer )
+	elevation_scale <- force( elevation_scale )
 
 	is_extruded <- TRUE
 	if( !is.null( l[["stroke_width"]] ) | !is.null( l[["stroke_colour"]] ) ) {
@@ -193,24 +196,30 @@ add_polygon <- function(
 
 	if ( tp == "sf" ) {
 		geometry_column <- c( "geometry" ) ## This is where we woudl also specify 'origin' or 'destination'
-		shape <- rcpp_polygon_geojson( data, l, geometry_column )
+		shape <- rcpp_polygon_geojson( data, l, geometry_column, digits )
 	} else if ( tp == "sfencoded" ) {
 		geometry_column <- "polyline"
 		shape <- rcpp_polygon_polyline( data, l, geometry_column )
 		jsfunc <- "add_polygon_polyline"
+	# } else if ( tp == "mesh" ) {
+	# 	geometry_column <- "geometry"
+	# 	jsfunc <- "add_mesh"
+	# 	shape <- rcpp_mesh_geojson( data, l, geometry_column )
 	}
 
 	light_settings <- jsonify::to_json(light_settings, unbox = T)
 	js_transitions <- resolve_transitions( transitions, "polygon" )
 
-	shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
-
-	#print( shape )
+	if( inherits( legend, "json" ) ) {
+		shape[["legend"]] <- legend
+	} else {
+		shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
+	}
 
 	invoke_method(
-		map, jsfunc, shape[["data"]], layer_id, light_settings,
+		map, jsfunc, map_type( map ), shape[["data"]], layer_id, light_settings,
 		auto_highlight, highlight_colour, shape[["legend"]], bbox, update_view, focus_layer,
-		js_transitions, is_extruded
+		js_transitions, is_extruded, elevation_scale, brush_radius
 		)
 }
 
@@ -220,7 +229,7 @@ add_polygon <- function(
 #' @export
 clear_polygon <- function( map, layer_id = NULL) {
 	layer_id <- layerId(layer_id, "polygon")
-	invoke_method(map, "md_layer_clear", layer_id, "polygon" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "polygon" )
 }
 
 

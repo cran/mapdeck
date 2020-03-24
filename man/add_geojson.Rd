@@ -4,15 +4,40 @@
 \alias{add_geojson}
 \title{Add Geojson}
 \usage{
-add_geojson(map, data = get_map_data(map), layer_id = NULL,
-  stroke_colour = NULL, stroke_opacity = NULL, stroke_width = NULL,
-  fill_colour = NULL, fill_opacity = NULL, radius = NULL,
-  elevation = NULL, light_settings = list(), legend = F,
-  legend_options = NULL, legend_format = NULL,
-  auto_highlight = FALSE, tooltip = NULL,
-  highlight_colour = "#AAFFFFFF", palette = "viridis",
-  na_colour = "#808080FF", update_view = TRUE, focus_layer = FALSE,
-  transitions = NULL)
+add_geojson(
+  map,
+  data = get_map_data(map),
+  layer_id = NULL,
+  stroke_colour = NULL,
+  stroke_opacity = NULL,
+  stroke_width = NULL,
+  dash_size = NULL,
+  dash_gap = NULL,
+  fill_colour = NULL,
+  fill_opacity = NULL,
+  radius = NULL,
+  elevation = NULL,
+  extruded = FALSE,
+  light_settings = list(),
+  legend = F,
+  legend_options = NULL,
+  legend_format = NULL,
+  auto_highlight = FALSE,
+  tooltip = NULL,
+  highlight_colour = "#AAFFFFFF",
+  palette = "viridis",
+  na_colour = "#808080FF",
+  line_width_units = c("metres", "pixels"),
+  line_width_scale = 1,
+  line_width_min_pixels = 0,
+  elevation_scale = 1,
+  point_radius_scale = 1,
+  point_radius_min_pixels = 1,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6,
+  transitions = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
@@ -27,20 +52,28 @@ to conflict and not plot correctly}
 
 \item{stroke_opacity}{column of an \code{sf} object, or field inside a GeoJSON \code{property} to use for opacity}
 
-\item{stroke_width}{column of an \code{sf} object, or field inside a GeoJSON \code{property} to use for width}
+\item{stroke_width}{column of an \code{sf} object, or field inside a GeoJSON \code{property} to use for width (in meters)}
+
+\item{dash_size}{size of each dash, relative to the width of the stroke}
+
+\item{dash_gap}{size of the gap between dashes, relative to the width of the stroke}
 
 \item{fill_colour}{column of an \code{sf} object, or field inside a GeoJSON \code{property} to use for colour}
 
 \item{fill_opacity}{column of an \code{sf} object, or field inside a GeoJSON \code{property} to use for opacity}
 
-\item{radius}{radius of points in meters. See details}
+\item{radius}{radius of points in meters. Default 1. See details}
 
-\item{elevation}{elevation of polygons. See details}
+\item{elevation}{elevation of polygons. Default 0. See details}
+
+\item{extruded}{logical indicating if polygons should extrude from the map.
+If \code{TRUE}, \code{stroke_colour} for polygons is ignored}
 
 \item{light_settings}{list of light setting parameters. See \link{light_settings}}
 
 \item{legend}{either a logical indiciating if the legend(s) should be displayed, or
-a named list indicating which colour attributes should be included in the legend.}
+a named list indicating which colour attributes should be included in the legend.
+A legend is only shown if you supply one of the colour arguments (fill or stroke)}
 
 \item{legend_options}{A list of options for controlling the legend.}
 
@@ -54,14 +87,35 @@ Only works on \code{sf} objects.}
 \item{highlight_colour}{hex string colour to use for highlighting. Must contain the alpha component.}
 
 \item{palette}{string or matrix. String will be one of \code{colourvalues::colour_palettes()}.
-A matrix is a 3 or 4 column numeric matrix of values between [0, 255],
-where the 4th column represents the alpha.}
+A matrix must have at least 5 rows, and 3 or 4 columns of values between [0, 255],
+where the 4th column represents the alpha. You can use a named list to specify a different
+palette for different colour options (where available),
+ e.g. list(fill_colour = "viridis", stroke_colour = "inferno")}
 
 \item{na_colour}{hex string colour to use for NA values}
+
+\item{line_width_units}{The units of the line width, one of 'meters', 'pixels'.
+When zooming in and out, meter sizes scale with the base map, and pixel sizes remain the same on screen.}
+
+\item{line_width_scale}{The line width multiplier that multiplied to all lines,
+including the LineString and MultiLineString features and also the outline for
+Polygon and MultiPolygon features if the stroked attribute is true}
+
+\item{line_width_min_pixels}{The minimum line width in pixels.}
+
+\item{elevation_scale}{Elevation multiplier. The final elevation is calculated by
+elevationScale * getElevation(d). elevationScale is a handy property to scale
+all polygon elevation without updating the data}
+
+\item{point_radius_scale}{A global radius multiplier for all points.}
+
+\item{point_radius_min_pixels}{The minimum radius in pixels.}
 
 \item{update_view}{logical indicating if the map should update the bounds to include this layer}
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
+
+\item{digits}{number of digits for rounding coordinates}
 
 \item{transitions}{list specifying the duration of transitions.}
 }
@@ -157,6 +211,7 @@ This should be a named list, where the names are one of
 \itemize{
   \item{css - a string of valid \code{css} for controlling the appearance of the legend}
   \item{title - a string to use for the title of the legend}
+  \item{digits - number to round the legend values to}
 }
 
 If the layer allows different fill and stroke colours, you can use different options for each. See examples in \link{add_arc}.
@@ -178,10 +233,10 @@ The list elements must be functions to apply to the values in the legend.
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 ## Not supplying colouring arguments, the function will try and find them in the GeoJSON
 mapdeck(
- token = key
  , location = c(145, -37.9)
  , zoom = 8
  , style = mapdeck_style("dark")
@@ -194,7 +249,6 @@ mapdeck(
 
 ## only supplying values to use for fill, the stroke will be default
 mapdeck(
- token = key
  , location = c(145, -37.9)
  , zoom = 8
  , style = mapdeck_style("dark")
@@ -206,7 +260,6 @@ mapdeck(
  )
 
 mapdeck(
- token = key
  , location = c(145, -37.9)
  , zoom = 8
  , style = mapdeck_style("dark")
@@ -219,7 +272,6 @@ mapdeck(
  )
 
 mapdeck(
- token = key
  , location = c(145, -37.9)
  , zoom = 8
  , style = mapdeck_style("dark")
@@ -240,7 +292,6 @@ sf$elevation <- sample(100:1000, size = nrow(sf), replace = T)
 geo <- geojsonsf::sf_geojson( sf )
 
 mapdeck(
- token = key
  , location = c(145, -37.9)
  , zoom = 8
  , style = mapdeck_style("dark")

@@ -4,16 +4,26 @@
 \alias{mapdeck}
 \title{mapdeck}
 \usage{
-mapdeck(data = NULL, token = get_access_token(api = "mapbox"),
-  width = NULL, height = NULL, padding = 0,
-  style = "mapbox://styles/mapbox/streets-v9", pitch = 0, zoom = 0,
-  bearing = 0, location = c(0, 0))
+mapdeck(
+  data = NULL,
+  token = get_access_token(api = "mapbox"),
+  width = NULL,
+  height = NULL,
+  padding = 0,
+  style = "mapbox://styles/mapbox/streets-v9",
+  pitch = 0,
+  zoom = 0,
+  bearing = 0,
+  location = c(0, 0),
+  show_view_state = FALSE
+)
 }
 \arguments{
-\item{data}{data to be used on the map. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
-\item{token}{Mapbox Acess token. Use \code{set_token()} to set a global token.
+\item{token}{Mapbox Acess token. Use \code{set_token()} or \code{Sys.setenv()} to set a global token.
+See Access Tokens section for further details.
 If left empty layers will still be plotted, but without a Mapbox map.}
 
 \item{width}{the width of the map}
@@ -22,7 +32,7 @@ If left empty layers will still be plotted, but without a Mapbox map.}
 
 \item{padding}{the padding of the map}
 
-\item{style}{the style of the map}
+\item{style}{the style of the map (see \link{mapdeck_style})}
 
 \item{pitch}{the pitch angle of the map}
 
@@ -31,7 +41,33 @@ If left empty layers will still be plotted, but without a Mapbox map.}
 \item{bearing}{bearing of the map between 0 and 360}
 
 \item{location}{unnamed vector of lon and lat coordinates (in that order)}
+
+\item{show_view_state}{logical, indicating whether to add the current View State to the map.
+When \code{TRUE}, the following is added as an overlay to the map
+\itemize{
+  \item{width}
+  \item{height}
+  \item{latitude & longitude}
+  \item{zoom}
+  \item{bearing}
+  \item{pitch}
+  \item{altitude}
+  \item{viewBounds}
+  \item{interactionState}
+}}
 }
 \description{
 mapdeck
 }
+\section{Access Tokens}{
+
+
+If the \code{token} argument is not used, the map will search for the token, firstly by
+checking if \code{set_token()} was used, then it will search environment variables using
+\code{Sys.getenv()} and the following values, in this order
+
+c("MAPBOX_TOKEN","MAPBOX_KEY","MAPBOX_API_TOKEN", "MAPBOX_API_KEY", "MAPBOX", "MAPDECK")
+
+If multiple tokens are found, the first one is used
+}
+

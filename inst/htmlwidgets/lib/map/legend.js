@@ -1,4 +1,47 @@
-function add_legend(map_id, layer_id, legendValues) {
+
+//https://stackoverflow.com/a/40475362/5977215
+function md_colour_domain( x, colour_range, map_id, map_type, layer_id, legend, format ) {
+	if( legend.legend ) {
+
+		//console.log( "md_colour_domain" );
+		//console.log( x );
+		var cd = md_make_legend_range(x[0], x[1], colour_range.length, legend.digits );
+
+		//console.log( cd );
+
+		var ledge = {
+  	fill_colour: {
+  		colour: colour_range,
+  		variable: cd,
+  		colourType: ["fill_colour"],
+  		type: ["gradient"],
+  		title: legend.title,        // TODO: the 'colour' argument, or if not supplied simply 'value' ?
+  		css: legend.css
+  	}
+  };
+  md_add_legend( map_id, map_type, layer_id, ledge, format );
+	}
+
+}
+
+function md_make_legend_range(startValue, stopValue, cardinality, digits ) {
+
+  var arr = [];
+  var currValue = startValue;
+  var step = (stopValue - startValue) / (cardinality - 1);
+  for (var i = 0; i < cardinality; i++) {
+    //arr.push(currValue + (step * i));
+    arr.push(parseFloat((currValue + (step * i)).toFixed( digits )));
+  }
+  return arr;
+}
+
+
+function md_add_legend(map_id, map_type, layer_id, legendValues, format ) {
+
+  if( !md_div_exists( 'legendContainer'+map_id ) ) {
+  	md_setup_legend( map_id );
+  }
 
   'use strict';
 
@@ -9,17 +52,22 @@ function add_legend(map_id, layer_id, legendValues) {
 
         if ( this_legend.colour !== undefined ) {
             if ( this_legend.type[0] === "category" || this_legend.colour.length == 1 ) {
-                add_legend_category( map_id, layer_id, this_legend );
+                md_add_legend_category( map_id, map_type, layer_id, this_legend, format );
             } else {
-                add_legend_gradient( map_id, layer_id, this_legend);
+                md_add_legend_gradient( map_id, map_type, layer_id, this_legend, format );
             }
         }
     });
 
 }
 
-function add_legend_gradient(map_id, layer_id, legendValues) {
+function md_add_legend_gradient(map_id, map_type, layer_id, legendValues, format ) {
     // fill gradient
+    // numeric values; format numbers according to legendValues.digits
+
+    //console.log( "legend digits" );
+    //console.log( legendValues );
+
     'use strict';
     var legendContent,
         legendTitle,
@@ -43,7 +91,7 @@ function add_legend_gradient(map_id, layer_id, legendValues) {
         while ( window[map_id + 'legend' + layer_id + legendValues.colourType].hasChildNodes() ) {
             window[map_id + 'legend' + layer_id + legendValues.colourType].removeChild(
             	window[map_id + 'legend' + layer_id + legendValues.colourType].lastChild
-            	);
+            );
         }
     }
 
@@ -66,8 +114,19 @@ function add_legend_gradient(map_id, layer_id, legendValues) {
         window[map_id + 'legend' + layer_id + legendValues.colourType].setAttribute('style', legendValues.css);
     }
 
-    for (i = 0; i < legendValues.colour.length; i++) {
-        jsColours.push( legendValues.colour[i] );
+    //console.log( legendValues.colour );
+
+    if( format === "hex") {
+	    for (i = 0; i < legendValues.colour.length; i++) {
+	      jsColours.push( legendValues.colour[i].substring(0,7) );
+	    }
+    } else {
+    	for (i = 0; i < legendValues.colour.length; i++) {
+
+    		var hex = md_RGBToHex( legendValues.colour[i] );
+
+	      jsColours.push( hex );
+	    }
     }
 
     colours = '(' + jsColours.join() + ')';
@@ -103,11 +162,11 @@ function add_legend_gradient(map_id, layer_id, legendValues) {
     window[map_id + 'legend' + layer_id + legendValues.colourType].appendChild(legendContent);
 
     if (isUpdating === false) {
-        placeControl(map_id, window[map_id + 'legend' + layer_id + legendValues.colourType], legendValues.position);
+        md_placeControl(map_id, map_type, window[map_id + 'legend' + layer_id + legendValues.colourType] );
     }
 }
 
-function generateColourBox(colourType, colour) {
+function md_generateColourBox(colourType, colour) {
     'use strict';
 
     if (colourType[0] === "fill_colour") {
@@ -118,7 +177,7 @@ function generateColourBox(colourType, colour) {
     }
 }
 
-function add_legend_category(map_id, layer_id, legendValues) {
+function md_add_legend_category(map_id, map_type, layer_id, legendValues, format ) {
 
     'use strict';
 
@@ -185,7 +244,12 @@ function add_legend_category(map_id, layer_id, legendValues) {
             divVal = document.createElement('div');
 
         //colourBox = 'height: 20px; width: 15px; background: ' + legendValues.legend.colour[i];
-        colourBox = generateColourBox(legendValues.colourType, legendValues.colour[i]);
+        if( format === "hex" ) {
+        	colourBox = md_generateColourBox(legendValues.colourType, legendValues.colour[i].substring(0,7) );
+        } else {
+        	var hex = md_RGBToHex( legendValues.colour[i] );
+        	colourBox = md_generateColourBox(legendValues.colourType, hex );
+        }
         divCol.setAttribute('style', colourBox);
         colourContainer.appendChild(divCol);
 
@@ -205,7 +269,7 @@ function add_legend_category(map_id, layer_id, legendValues) {
     window[map_id + 'legend' + layer_id + legendValues.colourType].appendChild(legendContent);
 
     if (isUpdating === false) {
-        placeControl(map_id, window[map_id + 'legend' + layer_id + legendValues.colourType], legendValues.position);
+        md_placeControl(map_id, map_type, window[map_id + 'legend' + layer_id + legendValues.colourType] );
     }
 
 }
@@ -225,57 +289,39 @@ function md_find_by_id( source, id, returnType ) {
     return;
 }
 
-function md_try_remove_legend( map_id, layer_id, colour_type ) {
+function md_try_remove_legend( map_id, map_type, layer_id, colour_type ) {
 	// find reference to this layer in the legends
 	var id = map_id + 'legend' + layer_id + colour_type;
 	var objIndex = md_find_by_id( window[map_id + 'legendPositions'], id, "index" );
 
 	if( objIndex !== undefined ) {
-		md_removeControl( map_id, id, window[map_id + 'legendPositions'][objIndex].position );
+		md_removeControl( map_id, map_type, id, window[map_id + 'legendPositions'][objIndex].position );
 		window[map_id + 'legendPositions'].splice(objIndex, 1);
 	  window[id] = null;
 	}
 }
 
-function md_clear_legend( map_id, layer_id ) {
+function md_clear_legend( map_id, map_type, layer_id ) {
 
-	md_try_remove_legend( map_id, layer_id, "fill_colour");
-	md_try_remove_legend( map_id, layer_id, "stroke_colour");
-	md_try_remove_legend( map_id, layer_id, "stroke_from");
-	md_try_remove_legend( map_id, layer_id, "stroke_to");
+	md_try_remove_legend( map_id, map_type, layer_id, "fill_colour");
+	md_try_remove_legend( map_id, map_type, layer_id, "stroke_colour");
+	md_try_remove_legend( map_id, map_type, layer_id, "stroke_from");
+	md_try_remove_legend( map_id, map_type, layer_id, "stroke_to");
 }
 
 
-function placeControl( map_id, object, position ) {
+function md_placeControl( map_id, map_type, object ) {
 
-    //var mapbox_ctrl = document.getElementsByClassName("mapdeckmap");
-    //var mapbox_ctrl = document.getElementsByClassName("legendContainer"+map_id);
     var mapbox_ctrl = document.getElementById( "legendContainer"+map_id);
-
-    //mapbox_ctrl[0].appendChild( object );
     mapbox_ctrl.appendChild( object );
+
     var ledge = {};
     var position = "BOTTOM_RIGHT";
-/*
-    switch (position) {
-    case 'TOP_LEFT':
-        window[map_id + 'map'].controls["TOP_LEFT"].push( object );
-        break;
-    case 'TOP_RIGHT':
-        window[map_id + 'map'].controls["TOP_RIGHT"].push( object );
-        break;
-    case 'BOTTOM_LEFT':
-        window[map_id + 'map'].controls["BOTTOM_LEFT"].push( object );
-        break;
-    case 'BOTTOM_RIGHT':
-        window[map_id + 'map'].controls["BOTTOM_RIGHT"].push( object );
-        break;
-    default:
-        position = "BOTTOM_LEFT"
-        window[map_id + 'map'].controls["BOTTOM_LEFT"].push( object );
-        break;
+
+    if( map_type == "google_map") {
+    	window[map_id + 'map'].controls[google.maps.ControlPosition.BOTTOM_LEFT].push( object );
     }
-*/
+
     ledge = {
         id: object.getAttribute('id'),
         position: position
@@ -285,10 +331,14 @@ function placeControl( map_id, object, position ) {
 }
 
 
-function md_removeControl( map_id, legend_id, position ) {
+function md_removeControl( map_id, map_type, legend_id, position ) {
 
-    var element = document.getElementById( legend_id );
-    element.parentNode.removeChild( element );
+	var element = document.getElementById( legend_id );
+	element.parentNode.removeChild( element );
+
+	if( map_type == "google_map") {
+	  md_clear_control( window[map_id + 'map'].controls[google.maps.ControlPosition.BOTTOM_LEFT], legend_id );
+	}
 
 /*
     switch (position) {
@@ -312,8 +362,7 @@ function md_removeControl( map_id, legend_id, position ) {
 */
 }
 
-/*
-function clearControl(control, legend_id) {
+function md_clear_control(control, legend_id) {
 
   if (control !== undefined ) {
     control.forEach(function (item, index) {
@@ -325,4 +374,3 @@ function clearControl(control, legend_id) {
     });
   }
 }
-*/

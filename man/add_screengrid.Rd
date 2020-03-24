@@ -4,16 +4,28 @@
 \alias{add_screengrid}
 \title{Add Screengrid}
 \usage{
-add_screengrid(map, data = get_map_data(map), lon = NULL, lat = NULL,
-  polyline = NULL, weight = NULL, colour_range = NULL,
-  opacity = 0.8, cell_size = 50, layer_id = NULL,
-  update_view = TRUE, focus_layer = FALSE)
+add_screengrid(
+  map,
+  data = get_map_data(map),
+  lon = NULL,
+  lat = NULL,
+  polyline = NULL,
+  weight = NULL,
+  aggregation = c("sum", "mean", "min", "max"),
+  colour_range = NULL,
+  opacity = 0.8,
+  cell_size = 50,
+  layer_id = NULL,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{lon}{column containing longitude values}
 
@@ -21,13 +33,16 @@ Web Mercator Projection}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
-\item{weight}{the weight of each value}
+\item{weight}{the weight of each value. Default 1}
+
+\item{aggregation}{one of 'min', 'mean', 'max', 'sum'.
+If supplied it specifies how the weights used.}
 
 \item{colour_range}{vector of 6 hex colours}
 
-\item{opacity}{opacity of cells. Value between 0 and 1}
+\item{opacity}{opacity of cells. Value between 0 and 1. Default 0.8}
 
-\item{cell_size}{size of grid squares in pixels}
+\item{cell_size}{size of grid squares in pixels. Default 50}
 
 \item{layer_id}{single value specifying an id for the layer. Use this value to
 distinguish between shape layers of the same type. Layers with the same id are likely
@@ -36,6 +51,8 @@ to conflict and not plot correctly}
 \item{update_view}{logical indicating if the map should update the bounds to include this layer}
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
+
+\item{digits}{number of digits for rounding coordinates}
 }
 \description{
 The Screen Grid Layer takes in an array of latitude and longitude coordinated points,
@@ -58,6 +75,7 @@ where \code{"your_column"} is the name of the column you're activating. See \cod
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 df <- read.csv(paste0(
 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/',
@@ -67,7 +85,7 @@ df <- read.csv(paste0(
 df <- df[ !is.na(df$lng), ]
 df$weight <- sample(1:10, size = nrow(df), replace = T)
 
-mapdeck( token = key, style = mapdeck_style('dark'), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style('dark'), pitch = 45 ) \%>\%
 add_screengrid(
   data = df
   , lat = "lat"
@@ -79,9 +97,10 @@ add_screengrid(
 )
 
 ## as an sf object
-library(sf)
-sf <- sf::st_as_sf( df, coords = c("lng", "lat"))
-mapdeck( token = key, style = mapdeck_style('dark'), pitch = 45 ) \%>\%
+library(sfheaders)
+sf <- sfheaders::sf_point( df, x = "lng", y = "lat")
+
+mapdeck( style = mapdeck_style('dark'), pitch = 45 ) \%>\%
 add_screengrid(
   data = sf
   , weight = "weight",

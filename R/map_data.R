@@ -1,18 +1,28 @@
 
 init_bbox <- function() return(  list(c(-180,-90),c(180,90)) )
 
-sfrow <- function( sf , sfc_type ) {
-	geom_column <- attr(sf, "sf_column")
-	return( which(vapply(sf[[geom_column]], function(x) attr(x, "class")[[2]], "") %in% sfc_type ) )
-}
+# sfrow <- function( sf , sfc_type ) {
+# 	geom_column <- attr(sf, "sf_column")
+# 	return( which(vapply(sf[[geom_column]], function(x) attr(x, "class")[[2]], "") %in% sfc_type ) )
+# }
 
 resolve_od_data <- function( data, l, origin, destination ) UseMethod("resolve_od_data")
 
 #' @export
 resolve_od_data.sf <- function( data, l, origin, destination ) {
 	if ( is.null( l[["origin"]] ) || is.null( l[["destination"]] ) ) {
-		stop("origin and destination columns required")
+		stop("mapdeck - origin and destination columns required")
 	}
+
+	## downcast each side of the sf object to POINT
+	attr( data, "sf_column" ) <- origin
+	data <- sfheaders::sf_cast( data, "POINT" )
+
+	attr( data, "sf_column" ) <- destination
+	data <- sfheaders::sf_cast( data, "POINT" )
+
+	l[["data"]] <- data
+
 
 	l[["data_type"]] <- "sf"
 	l[["bbox"]] <- get_od_box( data, l )
@@ -31,7 +41,7 @@ resolve_od_data.sfencoded <- function( data, l, origin, destination ) {
 	# # l[["data"]] <- data
 	# l <- resolve_od_data.sfencodedLite( data, l, origin, destination )
 	# return( l )
-  stop("data type not yet for supported origin-destination plots")
+  stop("mapdeck - data type not yet for supported origin-destination plots")
 }
 
 #' @export
@@ -50,26 +60,50 @@ resolve_od_data.sfencodedLite <- function( data, l, origin, destination ) {
 # 	l[["data_type"]] <- "sfencoded"
 # 	l[["data"]] <- data ## attach the data becaue it gets modified and it needs to be returend
 # 	return( l )
-	stop("data type not supported")
+	stop("mapdeck - data type not supported")
 }
 
 #' @export
 resolve_od_data.data.frame <- function( data, l, origin, destination ) {
 	if ( is.null( l[["origin"]] ) || is.null( l[["destination"]] ) ) {
-		stop("origin and destination columns required")
+		stop("mapdeck - origin and destination columns required")
 	}
 
-	if( length(origin) != 2 | length(destination) != 2 ) {
-		stop("origin and destination columns should both contain lon & lat values")
+	if( length( origin ) == 2 ) {
+		l[["start_lon"]] <- origin[1]
+		l[["start_lat"]] <- origin[2]
+		l[["start_elev"]] <- 0
+	} else if ( length( origin ) == 3 ) {
+		l[["start_lon"]] <- origin[1]
+		l[["start_lat"]] <- origin[2]
+		l[["start_elev"]] <- origin[3]
+	} else {
+		stop("mapdeck - origin and destination columns should contain lon & lat, and optionally elevation columns")
 	}
+
+	if( length( destination ) == 2 ) {
+		l[["end_lon"]] <- destination[1]
+		l[["end_lat"]] <- destination[2]
+		l[["end_elev"]] <- 0
+	} else if ( length( destination ) == 3 ) {
+		l[["end_lon"]] <- destination[1]
+		l[["end_lat"]] <- destination[2]
+		l[["end_elev"]] <- destination[3]
+	} else {
+		stop("mapdeck - origin and destination columns should contain lon & lat, and optionally elevation columns")
+	}
+
+	# if( length(origin) != 2 | length(destination) != 2 ) {
+	# 	stop("mapdeck - origin and destination columns should both contain lon & lat values")
+	# }
 
 	l[["data_type"]] <- "df"
 	l[["bbox"]] <- get_od_box( data, l )
 
-	l[["start_lon"]] <- origin[1]
-	l[["start_lat"]] <- origin[2]
-	l[["end_lon"]] <- destination[1]
-	l[["end_lat"]] <- destination[2]
+	# l[["start_lon"]] <- origin[1]
+	# l[["start_lat"]] <- origin[2]
+	# l[["end_lon"]] <- destination[1]
+	# l[["end_lat"]] <- destination[2]
 
 	l[["origin"]] <- NULL
 	l[["destination"]] <- NULL
@@ -87,7 +121,7 @@ resolve_elevation_data.data.frame <- function( data, l, elevation, sf_geom ) {
 		l[["data_type"]] <- "sfencoded"
 	} else {
 	  if ( !(all(sf_geom %in% c( "POINT", "MULTIPOINT") ) ) )
-		  stop("unsupported data type")
+		  stop("mapdeck - unsupported data type")
 
 		l[["data_type"]] <- "df"
 		l[["bbox"]] <- get_box( data, l )
@@ -134,14 +168,32 @@ resolve_elevation_data.sfencodedLite <- function( data, l, elevation, sf_geom ) 
 ## data using a single geometry ()
 resolve_data <- function( data, l, sf_geom ) UseMethod( "resolve_data" )
 
-sfc_type <- function( sf, sfc_col ) {
-	cls <- attr(sf[[sfc_col]], "class")
-	return( gsub("sfc_", "", cls[1] ) )
-}
+# sfc_type <- function( sf, sfc_col ) {
+# 	cls <- attr(sf[[sfc_col]], "class")
+# 	return( gsub("sfc_", "", cls[1] ) )
+# }
 
 ##
-sf_needs_subsetting <- function( data, sfc_col, sf_geom ) {
-	return( !sfc_type( data, sfc_col ) %in% toupper( sf_geom ) )
+# sf_needs_subsetting <- function( data, sfc_col, sf_geom ) {
+# 	return( !sfc_type( data, sfc_col ) %in% toupper( sf_geom ) )
+# }
+
+
+#' @export
+resolve_data.mesh3d <- function( data, l, sf_geom ) {
+	l[["data"]] <- data
+	l[["bbox"]] <- get_box( data, l )
+	l[["geometry"]] <- "geometry"
+	l[["data_type"]] <- "mesh"
+	return(l)
+}
+#' @export
+resolve_data.quadmesh <- function( data, l, sf_geom ) {
+	l[["data"]] <- data
+	l[["bbox"]] <- get_box( data, l )
+	l[["geometry"]] <- "geometry"
+	l[["data_type"]] <- "mesh"
+	return(l)
 }
 
 ## use the specificed st_geometry column
@@ -151,8 +203,21 @@ resolve_data.sf <- function( data, l, sf_geom ) {
 	sfc_col <- attr( data, "sf_column" )
 	l[["geometry"]] <- sfc_col
 
-	if( sf_needs_subsetting( data, sfc_col, sf_geom ) ) {
-		l[["data"]] <- data[ sfrow(data, sf_geom) , ]
+	# if( sf_needs_subsetting( data, sfc_col, sf_geom ) ) {
+	# 	l[["data"]] <- data[ sfrow(data, sf_geom) , ]
+	# }
+
+	## TODO: move to c++
+	## only cast if it's needed
+	cls <- attr( data[[ sfc_col ]], "class" )
+
+	if( is.null( cls ) ) {
+		stop("mapdeck - invalid sf object; have you loaded library(sf)?")
+	}
+
+	cls <- gsub("sfc_", "", cls[1])
+	if( cls != sf_geom ) {
+		l[["data"]] <- sfheaders::sf_cast( data, sf_geom )
 	}
 
 	l[["bbox"]] <- get_box( data, l )
@@ -161,6 +226,29 @@ resolve_data.sf <- function( data, l, sf_geom ) {
 }
 
 get_box <- function( data, l ) UseMethod("get_box")
+
+#' @export
+get_box.mesh3d <- function( data, l ) {
+	xrange <- range(data[["vb"]][1L, ], na.rm = TRUE)
+	yrange <- range(data[["vb"]][2L, ], na.rm = TRUE)
+
+	bbox <- list(
+		c(xrange[1L], yrange[1L]), c(xrange[2L], yrange[2L])
+	)
+	return( jsonify::to_json( bbox ) )
+}
+#' @export
+get_box.quadmesh <- function( data, l ) {
+	md <- data[["raster_metadata"]]
+	if(is.null(md)) {
+		stop("mapdeck - expecting raster_metadata attribute on quadmesh object. Make sure you are using v0.4.0 of quadmesh")
+	}
+  bbox <- list(
+  	 c(md[["xmn"]], md[["ymn"]]), c(md[["xmx"]], md[["ymx"]])
+  	 )
+  return( jsonify::to_json( bbox ) )
+}
+
 
 #' @export
 get_box.sfencoded <- function( data, l ) {
@@ -179,8 +267,8 @@ get_box.sf <- function( data, l ) {
 #' @export
 get_box.data.frame <- function( data, l ) {
 
-	lat <- data[, l[["lat"]] ]
-	lon <- data[, l[["lon"]] ]
+	lat <- data[, l[["lat"]], drop = TRUE ]
+	lon <- data[, l[["lon"]], drop = TRUE ]
 	xmin <- min(lon); xmax <- max(lon)
 	ymin <- min(lat); ymax <- max(lat)
 	bbox <- list( c(xmin, ymin), c(xmax, ymax) )
@@ -205,8 +293,10 @@ get_od_box.sf <- function( data, l ) {
 
 #' @export
 get_od_box.data.frame <- function( data, l ) {
-	lon <- c( data[, l[["origin"]][1] ], data[, l[["destination"]][1]] )
-	lat <- c( data[, l[["origin"]][2] ], data[, l[["destination"]][2]] )
+
+	lon <- c( data[, l[["origin"]][1], drop = TRUE ], data[, l[["destination"]][1], drop = TRUE ] )
+	lat <- c( data[, l[["origin"]][2], drop = TRUE ], data[, l[["destination"]][2], drop = TRUE ] )
+
 	xmin <- min(lon); xmax <- max(lon)
 	ymin <- min(lat); ymax <- max(lat)
 	bbox <- list( c(xmin, ymin), c(xmax, ymax) )
@@ -217,7 +307,7 @@ get_od_box.data.frame <- function( data, l ) {
 resolve_data.sfencoded <- function( data, l, sf_geom ) {
 
 	if ( "POLYGON" %in% sf_geom & !("list" %in% attr( data[[ attr( data, "encoded_column") ]], "class" )) ) {
-		stop("sfencoded POLYGON must be a list column")
+		stop("mapdeck - sfencoded POLYGON must be a list column")
 	}
 
 	if( !attr( data, "sfAttributes" )[["type"]] %in% sf_geom ) {
@@ -248,23 +338,38 @@ resolve_data.sfencodedLite <- function( data, l, sf_geom ) {
 #' @export
 resolve_data.data.frame <- function( data, l, sf_geom ) {
 
+	if( !inherits(data, "sf") &
+			!inherits(data, "sfencoded") &
+			!inherits(data, "sfencodedLite" ) &
+			is.null( l[["polyline"]] )
+		) {
+
+		if( is.null(l[["lon"]] ) ) {
+			l[["lon"]] <- find_lon_column( names( data ) )
+		}
+		if( is.null(l[["lat"]] ) ) {
+			l[["lat"]] <- find_lat_column( names( data ) )
+		}
+	}
+
 	## data.frame will only really work for points, with a lon & lat column
 	if ( !is.null( l[["polyline"]] ) ) {
 		## the user supplied a polyline in a data.frame, so we need to allow this through
 		l[["data_type"]] <- "sfencoded"
 	} else {
 		if ( sf_geom[1] != "POINT" )
-			stop("unsupported data type")
+			stop("mapdeck - unsupported data type")
 
 		l[["bbox"]] <- get_box( data, l )
 		l[["data_type"]] <- "df"
 	}
+
 	l[["data"]] <- data
 	return( l )
 }
 
 #' @export
-resolve_data.default <- function( data, ... ) stop("This type of data is not supported")
+resolve_data.default <- function( data, ... ) stop("mapdeck - This type of data is not supported")
 
 resolve_geojson_data <- function( data, l ) UseMethod("resolve_geojson_data")
 
@@ -303,7 +408,7 @@ resolve_geojson_data.character <- function( data, l ) {
 }
 
 #' @export
-resolve_geojson_data.default <- function( data, l ) stop("I don't know how to handle this type of data")
+resolve_geojson_data.default <- function( data, l ) stop("mapdeck - I don't know how to handle this type of data")
 
 
 resolve_palette <- function( l, palette ) {
@@ -317,7 +422,11 @@ resolve_palette <- function( l, palette ) {
 
 
 resolve_legend <- function( l, legend ) {
-	l[['legend']] <- legend
+	if(inherits( legend, "json" ) ) {
+		l[["legend"]] <- FALSE
+	} else {
+	  l[['legend']] <- legend
+	}
 	return( l )
 }
 
@@ -341,3 +450,37 @@ resolve_legend_format <- function( l, legend_format ) {
 }
 
 is_url <- function(geojson) grepl("^https?://", geojson, useBytes=TRUE)
+
+
+# resolve opacity
+#
+resolve_opacity <- function( opacity ) {
+	if( !is.null( opacity ) ) {
+		if( is.numeric( opacity ) ) {
+	    if( opacity < 1 & opacity >= 0 ) opacity <- opacity * 255
+		}
+	}
+	return( opacity )
+}
+
+
+find_lat_column = function(names) {
+
+	lats = names[grep("^(lat|lats|latitude|latitudes|stop_lat|shape_pt_lat)$", names, ignore.case = TRUE)]
+
+	if (length(lats) == 1) {
+		return(lats)
+	}
+	stop("mapdeck - could not find latitude column")
+}
+
+
+find_lon_column = function(names) {
+
+	lons = names[grep("^(lon|lons|lng|lngs|long|longs|longitude|longitudes|stop_lon|shape_pt_lon)$", names, ignore.case = TRUE)]
+
+	if (length(lons) == 1) {
+		return(lons)
+	}
+	stop("mapdeck - could not find longitude column")
+}

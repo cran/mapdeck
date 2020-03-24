@@ -4,17 +4,37 @@
 \alias{add_grid}
 \title{Add Grid}
 \usage{
-add_grid(map, data = get_map_data(map), lon = NULL, lat = NULL,
-  polyline = NULL, colour_range = NULL, cell_size = 1000,
-  extruded = TRUE, elevation_scale = 1, auto_highlight = FALSE,
-  highlight_colour = "#AAFFFFFF", layer_id = NULL,
-  update_view = TRUE, focus_layer = FALSE)
+add_grid(
+  map,
+  data = get_map_data(map),
+  lon = NULL,
+  lat = NULL,
+  polyline = NULL,
+  cell_size = 1000,
+  extruded = TRUE,
+  elevation = NULL,
+  elevation_function = c("sum", "mean", "min", "max"),
+  colour = NULL,
+  colour_function = c("sum", "mean", "min", "max"),
+  elevation_scale = 1,
+  colour_range = NULL,
+  legend = FALSE,
+  legend_options = NULL,
+  auto_highlight = FALSE,
+  highlight_colour = "#AAFFFFFF",
+  layer_id = NULL,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6,
+  transitions = NULL,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{lon}{column containing longitude values}
 
@@ -22,13 +42,29 @@ Web Mercator Projection}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
+\item{cell_size}{size of each cell in meters. Default 1000}
+
+\item{extruded}{logical indicating if cells are elevated or not. Default TRUE}
+
+\item{elevation}{the height the polygon extrudes from the map. Only available if neither
+\code{stroke_colour} or \code{stroke_width} are supplied. Default 0}
+
+\item{elevation_function}{one of 'min', 'mean', 'max', 'sum'.
+IF supplied it specifies how the elevation values are calcualted. Defaults to sum.}
+
+\item{colour}{column containing numeric values to colour by.}
+
+\item{colour_function}{one of 'min', 'mean', 'max', 'sum'.
+If supplied it specifies how the colour values are calculated. Defaults to sum.}
+
+\item{elevation_scale}{elevation multiplier.}
+
 \item{colour_range}{vector of 6 hex colours}
 
-\item{cell_size}{size of each cell in meters}
+\item{legend}{either a logical indiciating if the legend(s) should be displayed, or
+a named list indicating which colour attributes should be included in the legend.}
 
-\item{extruded}{logical indicating if cells are elevated or not}
-
-\item{elevation_scale}{cell elevation multiplier}
+\item{legend_options}{A list of options for controlling the legend.}
 
 \item{auto_highlight}{logical indicating if the shape under the mouse should auto-highlight}
 
@@ -41,6 +77,14 @@ to conflict and not plot correctly}
 \item{update_view}{logical indicating if the map should update the bounds to include this layer}
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
+
+\item{digits}{number of digits for rounding coordinates}
+
+\item{transitions}{list specifying the duration of transitions.}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
 The Grid Layer renders a grid heatmap based on an array of points.
@@ -63,6 +107,7 @@ where \code{"your_column"} is the name of the column you're activating. See \cod
 \donttest{
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 df <- read.csv(paste0(
 'https://raw.githubusercontent.com/uber-common/deck.gl-data/master/',
@@ -71,7 +116,7 @@ df <- read.csv(paste0(
 
 df <- df[ !is.na(df$lng ), ]
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_grid(
   data = df
   , lat = "lat"
@@ -83,10 +128,10 @@ add_grid(
 )
 
 ## using sf object
-library(sf)
-sf <- sf::st_as_sf( df, coords = c("lng", "lat"))
+library(sfheaders)
+sf <- sfheaders::sf_point( df, x = "lng", y = "lat")
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
 add_grid(
   data = sf
   , cell_size = 5000
@@ -95,7 +140,36 @@ add_grid(
   , auto_highlight = TRUE
 )
 
+## using colour and elevation functions, and legends
+df$val <- sample(1:10, size = nrow(df), replace = T)
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
+add_grid(
+	data = df
+	, lat = "lat"
+	, lon = "lng"
+	, layer_id = "hex_layer"
+	, elevation_scale = 100
+	, legend = T
+	, colour_function = "max"
+	, colour = "val"
+)
+
+mapdeck( style = mapdeck_style("dark"), pitch = 45) \%>\%
+add_grid(
+	data = df
+	, lat = "lat"
+	, lon = "lng"
+	, layer_id = "hex_layer"
+	, elevation_scale = 10
+	, legend = T
+	, elevation_function = "mean"
+	, elevation = "val"
+)
 
 }
 
+}
+\seealso{
+add_hexagon
 }

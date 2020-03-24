@@ -4,44 +4,74 @@
 \alias{add_arc}
 \title{Add arc}
 \usage{
-add_arc(map, data = get_map_data(map), layer_id = NULL, origin,
-  destination, id = NULL, stroke_from = NULL,
-  stroke_from_opacity = NULL, stroke_to = NULL,
-  stroke_to_opacity = NULL, stroke_width = NULL, tooltip = NULL,
-  auto_highlight = FALSE, highlight_colour = "#AAFFFFFF", legend = F,
-  legend_options = NULL, legend_format = NULL, palette = "viridis",
-  na_colour = "#808080FF", update_view = TRUE, focus_layer = FALSE,
-  transitions = NULL)
+add_arc(
+  map,
+  data = get_map_data(map),
+  layer_id = NULL,
+  origin,
+  destination,
+  id = NULL,
+  stroke_from = NULL,
+  stroke_from_opacity = NULL,
+  stroke_to = NULL,
+  stroke_to_opacity = NULL,
+  stroke_width = NULL,
+  tilt = NULL,
+  height = NULL,
+  tooltip = NULL,
+  auto_highlight = FALSE,
+  highlight_colour = "#AAFFFFFF",
+  legend = F,
+  legend_options = NULL,
+  legend_format = NULL,
+  palette = "viridis",
+  na_colour = "#808080FF",
+  update_view = TRUE,
+  focus_layer = FALSE,
+  transitions = NULL,
+  digits = 6,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{layer_id}{single value specifying an id for the layer. Use this value to
 distinguish between shape layers of the same type. Layers with the same id are likely
 to conflict and not plot correctly}
 
-\item{origin}{vector of longitude and latitude columns, or an \code{sfc} column}
+\item{origin}{vector of longitude and latitude columns, and optionally an elevation column,
+or an \code{sfc} column}
 
-\item{destination}{vector of longitude and latitude columns, or an \code{sfc} column}
+\item{destination}{vector of longitude and latitude columns, and optionally an elevatino column,
+or an \code{sfc} column}
 
 \item{id}{an id value in \code{data} to identify layers when interacting in Shiny apps.}
 
-\item{stroke_from}{variable or hex colour to use as the staring stroke colour}
+\item{stroke_from}{column of \code{data} or hex colour to use as the staring stroke colour.
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
 \item{stroke_from_opacity}{Either a string specifying the
 column of \code{data} containing the stroke opacity of each shape, or a value
-between 1 and 255 to be applied to all the shapes}
+between 1 and 255 to be applied to all the shapes. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
 
-\item{stroke_to}{variable or hex colour to use as the ending stroke colour}
+\item{stroke_to}{column of \code{data} or hex colour to use as the ending stroke colour.
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
 \item{stroke_to_opacity}{Either a string specifying the
 column of \code{data} containing the stroke opacity of each shape, or a value
-between 1 and 255 to be applied to all the shapes}
+between 1 and 255 to be applied to all the shapes. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
 
-\item{stroke_width}{width of the stroke}
+\item{stroke_width}{width of the stroke in pixels}
+
+\item{tilt}{value to tilt the arcs to the side, in degrees [-90, 90]}
+
+\item{height}{value to multiply the height.}
 
 \item{tooltip}{variable of \code{data} containing text or HTML to render as a tooltip}
 
@@ -57,8 +87,10 @@ a named list indicating which colour attributes should be included in the legend
 \item{legend_format}{A list containing functions to apply to legend values. See section legend}
 
 \item{palette}{string or matrix. String will be one of \code{colourvalues::colour_palettes()}.
-A matrix is a 3 or 4 column numeric matrix of values between [0, 255],
-where the 4th column represents the alpha.}
+A matrix must have at least 5 rows, and 3 or 4 columns of values between [0, 255],
+where the 4th column represents the alpha. You can use a named list to specify a different
+palette for different colour options (where available),
+ e.g. list(fill_colour = "viridis", stroke_colour = "inferno")}
 
 \item{na_colour}{hex string colour to use for NA values}
 
@@ -67,6 +99,12 @@ where the 4th column represents the alpha.}
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
 
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{digits}{number of digits for rounding coordinates}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
 The Arc Layer renders raised arcs joining pairs of source and target coordinates
@@ -107,6 +145,7 @@ This should be a named list, where the names are one of
 \itemize{
   \item{css - a string of valid \code{css} for controlling the appearance of the legend}
   \item{title - a string to use for the title of the legend}
+  \item{digits - number to round the legend values to}
 }
 
 If the layer allows different fill and stroke colours, you can use different options for each. See examples in \link{add_arc}.
@@ -148,6 +187,7 @@ stroke_width = 0
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 url <- 'https://raw.githubusercontent.com/plotly/datasets/master/2011_february_aa_flight_paths.csv'
 flights <- read.csv(url)
@@ -155,7 +195,7 @@ flights$id <- seq_len(nrow(flights))
 flights$stroke <- sample(1:3, size = nrow(flights), replace = T)
 flights$info <- paste0("<b>",flights$airport1, " - ", flights$airport2, "</b>")
 
-mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
+mapdeck( style = mapdeck_style("dark"), pitch = 45 ) \%>\%
   add_arc(
   data = flights
   , layer_id = "arc_layer"
@@ -172,25 +212,77 @@ mapdeck( token = key, style = mapdeck_style("dark"), pitch = 45 ) \%>\%
     css = "max-height: 100px;")
  )
 
-## Using a 2-sfc-column sf object
-library(sf)
+mapdeck( style = mapdeck_style("dark")) \%>\%
+  add_arc(
+  data = flights
+  , layer_id = "arc_layer"
+  , origin = c("start_lon", "start_lat")
+  , destination = c("end_lon", "end_lat")
+  , stroke_from = "airport1"
+  , stroke_to = "airport2"
+  , stroke_width = "stroke"
+  )
 
-sf_flights <- cbind(
-  sf::st_as_sf(flights, coords = c("start_lon", "start_lat"))
-  , sf::st_as_sf(flights[, c("end_lon","end_lat")], coords = c("end_lon", "end_lat"))
-)
+## Arcs can have an elevated start & destination
+flights$start_elev <- sample(100000:1000000, size = nrow(flights), replace = TRUE )
+
+mapdeck( style = mapdeck_style("dark")) \%>\%
+  add_arc(
+  data = flights
+  , layer_id = "arc_layer"
+  , origin = c("start_lon", "start_lat", "start_elev")
+  , destination = c("end_lon", "end_lat", "start_elev")
+  , stroke_from = "airport1"
+  , stroke_to = "airport2"
+  , stroke_width = "stroke"
+  )
+
+## Using a 2-sfc-column sf object
+library(sfheaders)
+
+sf_flights <- sfheaders::sf_point(
+  flights
+  , x = "start_lon"
+  , y = "start_lat"
+  , z = "start_elev"
+  , keep = TRUE
+  )
+destination <- sfheaders::sfc_point(
+  flights
+  , x = "end_lon"
+  , y = "end_lat"
+  , z = "start_elev"
+  )
+
+sf_flights$destination <- destination
 
 mapdeck(
-  token = key
 ) \%>\%
  add_arc(
    data = sf_flights
    , origin = 'geometry'
-   , destination = 'geometry.1'
+   , destination = 'destination'
    , layer_id = 'arcs'
    , stroke_from = "airport1"
    , stroke_to = "airport2"
 )
+
+## using a brush
+
+mapdeck(
+  , style = mapdeck_style("light")
+) \%>\%
+ add_arc(
+   data = sf_flights
+   , origin = 'geometry'
+   , destination = 'destination'
+   , layer_id = 'arcs'
+   , stroke_from = "airport1"
+   , stroke_to = "airport2"
+   , stroke_width = 4
+   , brush_radius = 500000
+)
+
 
 
 }

@@ -4,14 +4,17 @@
 \alias{mapdeck_style}
 \title{Mapdeck Style}
 \usage{
-mapdeck_style(style = c("dark", "light", "outdoors", "streets",
-  "satellite", "satellite-streets"))
+mapdeck_style(
+  style = c("dark", "light", "outdoors", "streets", "satellite", "satellite-streets")
+)
 }
 \arguments{
 \item{style}{one of streets, outdoors, light, dark, satellite, satellite-streets}
 }
 \description{
-Various styles available to all Mapbox accounts using a valid access token
+Various styles available to all Mapbox accounts using a valid access token.
+Available styles are listed at
+\url{https://docs.mapbox.com/api/maps/#styles}.
 }
 \examples{
 \donttest{

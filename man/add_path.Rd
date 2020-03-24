@@ -4,33 +4,60 @@
 \alias{add_path}
 \title{Add Path}
 \usage{
-add_path(map, data = get_map_data(map), polyline = NULL,
-  stroke_colour = NULL, stroke_width = NULL, stroke_opacity = NULL,
-  tooltip = NULL, layer_id = NULL, id = NULL,
-  auto_highlight = FALSE, highlight_colour = "#AAFFFFFF",
-  palette = "viridis", na_colour = "#808080FF", legend = FALSE,
-  legend_options = NULL, legend_format = NULL, update_view = TRUE,
-  focus_layer = FALSE, transitions = NULL)
+add_path(
+  map,
+  data = get_map_data(map),
+  polyline = NULL,
+  stroke_colour = NULL,
+  stroke_width = NULL,
+  stroke_opacity = NULL,
+  dash_size = NULL,
+  dash_gap = NULL,
+  tooltip = NULL,
+  billboard = FALSE,
+  layer_id = NULL,
+  id = NULL,
+  auto_highlight = FALSE,
+  highlight_colour = "#AAFFFFFF",
+  palette = "viridis",
+  na_colour = "#808080FF",
+  legend = FALSE,
+  legend_options = NULL,
+  legend_format = NULL,
+  update_view = TRUE,
+  focus_layer = FALSE,
+  digits = 6,
+  transitions = NULL,
+  brush_radius = NULL
+)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
-\item{data}{data to be used in the layer. All coordinates are expected to be in
-Web Mercator Projection}
+\item{data}{data to be used in the layer. All coordinates are expected to be
+EPSG:4326 (WGS 84) coordinate system}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
 \item{stroke_colour}{variable of \code{data} or hex colour for the stroke. If used,
 \code{elevation} is ignored.
-transition enabled}
+If using a hex colour, use either a single value, or a vector the same length as \code{data}}
 
-\item{stroke_width}{width of the stroke. If used, \code{elevation} is ignored. transition enabled}
+\item{stroke_width}{width of the stroke in meters. Default 1.}
 
-\item{stroke_opacity}{value between 0 and 255. Either a string specifying the
-column of \code{data} containing the stroke opacity of each shape, or a single value
-to be applied to all the shapes}
+\item{stroke_opacity}{Either a string specifying the column of \code{data}
+containing the opacity of each shape, or a single value in [0,255], or [0, 1),
+to be applied to all the shapes. Default 255. If a hex-string is used as the
+colour, this argument is ignored and you should include the alpha on the hex string}
+
+\item{dash_size}{size of each dash, relative to the width of the stroke}
+
+\item{dash_gap}{size of the gap between dashes, relative to the width of the stroke}
 
 \item{tooltip}{variable of \code{data} containing text or HTML to render as a tooltip}
+
+\item{billboard}{logical indicating if the path always faces the camera (TRUE) or
+if it always faces up (FALSE)}
 
 \item{layer_id}{single value specifying an id for the layer. Use this value to
 distinguish between shape layers of the same type. Layers with the same id are likely
@@ -43,8 +70,10 @@ to conflict and not plot correctly}
 \item{highlight_colour}{hex string colour to use for highlighting. Must contain the alpha component.}
 
 \item{palette}{string or matrix. String will be one of \code{colourvalues::colour_palettes()}.
-A matrix is a 3 or 4 column numeric matrix of values between [0, 255],
-where the 4th column represents the alpha.}
+A matrix must have at least 5 rows, and 3 or 4 columns of values between [0, 255],
+where the 4th column represents the alpha. You can use a named list to specify a different
+palette for different colour options (where available),
+ e.g. list(fill_colour = "viridis", stroke_colour = "inferno")}
 
 \item{na_colour}{hex string colour to use for NA values}
 
@@ -59,7 +88,13 @@ a named list indicating which colour attributes should be included in the legend
 
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
 
+\item{digits}{number of digits for rounding coordinates}
+
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
 }
 \description{
 The Path Layer takes in lists of coordinate points and renders them as
@@ -103,6 +138,7 @@ This should be a named list, where the names are one of
 \itemize{
   \item{css - a string of valid \code{css} for controlling the appearance of the legend}
   \item{title - a string to use for the title of the legend}
+  \item{digits - number to round the legend values to}
 }
 
 If the layer allows different fill and stroke colours, you can use different options for each. See examples in \link{add_arc}.
@@ -136,10 +172,10 @@ you are clicking on
 
 ## You need a valid access token from Mapbox
 key <- 'abc'
+set_token( key )
 
 mapdeck(
-  token = key
-  , style = 'mapbox://styles/mapbox/dark-v9'
+  style = 'mapbox://styles/mapbox/dark-v9'
   , location = c(145, -37.8)
   , zoom = 10) \%>\%
   add_path(

@@ -4,7 +4,8 @@ mapdeckPathDependency <- function() {
 			name = "path",
 			version = "1.0.0",
 			src = system.file("htmlwidgets/lib/path", package = "mapdeck"),
-			script = c("path.js")
+			script = c("path.js"),
+			all_files = FALSE
 		)
 	)
 }
@@ -16,6 +17,11 @@ mapdeckPathDependency <- function() {
 #' extruded lines with mitering.
 #'
 #' @inheritParams add_polygon
+#' @param stroke_width width of the stroke in meters. Default 1.
+#' @param dash_size size of each dash, relative to the width of the stroke
+#' @param dash_gap size of the gap between dashes, relative to the width of the stroke
+#' @param billboard logical indicating if the path always faces the camera (TRUE) or
+#' if it always faces up (FALSE)
 #'
 #' @inheritSection add_polygon data
 #' @inheritSection add_arc legend
@@ -43,10 +49,10 @@ mapdeckPathDependency <- function() {
 #'
 #' ## You need a valid access token from Mapbox
 #' key <- 'abc'
+#' set_token( key )
 #'
 #' mapdeck(
-#'   token = key
-#'   , style = 'mapbox://styles/mapbox/dark-v9'
+#'   style = 'mapbox://styles/mapbox/dark-v9'
 #'   , location = c(145, -37.8)
 #'   , zoom = 10) %>%
 #'   add_path(
@@ -71,7 +77,10 @@ add_path <- function(
 	stroke_colour = NULL,
 	stroke_width = NULL,
 	stroke_opacity = NULL,
+	dash_size = NULL,
+	dash_gap = NULL,
 	tooltip = NULL,
+	billboard = FALSE,
 	layer_id = NULL,
 	id = NULL,
 	auto_highlight = FALSE,
@@ -83,14 +92,18 @@ add_path <- function(
 	legend_format = NULL,
 	update_view = TRUE,
 	focus_layer = FALSE,
-	transitions = NULL
+	digits = 6,
+	transitions = NULL,
+	brush_radius = NULL
 ) {
 
 	l <- list()
 	l[["polyline"]] <- force( polyline )
 	l[["stroke_colour"]] <- force( stroke_colour)
 	l[["stroke_width"]] <- force( stroke_width )
-	l[["stroke_opacity"]] <- force( stroke_opacity )
+	l[["stroke_opacity"]] <- resolve_opacity( stroke_opacity )
+	l[["dash_size"]] <- force(dash_size)
+	l[["dash_gap"]] <- force(dash_gap)
 	l[["tooltip"]] <- force(tooltip)
 	l[["id"]] <- force(id)
 	l[["na_colour"]] <- force(na_colour)
@@ -98,7 +111,7 @@ add_path <- function(
 	l <- resolve_palette( l, palette )
 	l <- resolve_legend( l, legend )
 	l <- resolve_legend_options( l, legend_options )
-	l <- resolve_data( data, l, c("LINESTRING","MULTILINESTRING") )
+	l <- resolve_data( data, l, c("LINESTRING") )
 
 	bbox <- init_bbox()
 	update_view <- force( update_view )
@@ -124,21 +137,25 @@ add_path <- function(
 
 	if ( tp == "sf" ) {
 		geometry_column <- c( "geometry" ) ## This is where we woudl also specify 'origin' or 'destination'
-		shape <- rcpp_path_geojson( data, l, geometry_column )
+		shape <- rcpp_path_geojson( data, l, geometry_column, digits, "path" )
 		jsfunc <- "add_path_geo"
 	} else if ( tp == "sfencoded" ) {
 		jsfunc <- "add_path_polyline"
 		geometry_column <- "polyline"
-		shape <- rcpp_path_polyline( data, l, geometry_column )
+		shape <- rcpp_path_polyline( data, l, geometry_column, "path" )
 	}
 
 	js_transitions <- resolve_transitions( transitions, "path" )
-	shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
+	if( inherits( legend, "json" ) ) {
+		shape[["legend"]] <- legend
+	} else {
+		shape[["legend"]] <- resolve_legend_format( shape[["legend"]], legend_format )
+	}
 
 	invoke_method(
-		map, jsfunc, shape[["data"]], layer_id, auto_highlight,
+		map, jsfunc, map_type( map ), shape[["data"]], layer_id, auto_highlight,
 		highlight_colour, shape[["legend"]], bbox, update_view, focus_layer,
-		js_transitions
+		js_transitions, billboard, brush_radius
 		)
 }
 
@@ -147,7 +164,7 @@ add_path <- function(
 #' @export
 clear_path <- function( map, layer_id = NULL) {
 	layer_id <- layerId(layer_id, "path")
-	invoke_method(map, "md_layer_clear", layer_id, "path" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "path" )
 }
 
 
