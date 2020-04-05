@@ -1,4 +1,13 @@
-# mapdeck 0.3
+# v0.3.2
+
+* `add_animated_arc()` layer
+* better handling of polygon colours [issue287](https://github.com/SymbolixAU/mapdeck/issues/287)
+* bug fixed when clearing a layer [issue286](https://github.com/SymbolixAU/mapdeck/issues/286)
+* layers can repeat at low zoom levels [issue282](https://github.com/SymbolixAU/mapdeck/issues/282)
+* mapbox dependencies udpated to 1.9.0
+* tooltip for binary layers fixed [issue280](https://github.com/SymbolixAU/mapdeck/issues/280)
+
+# v0.3.1
 
 * you can now use most `sfc` geometry types in any plotting layer
 * performance boost for `add_scatterplot()`, `add_column()` and `add_pointcloud()`
@@ -35,7 +44,7 @@
 * `add_hexagon` gets `weight` and `colour_value` arguments for defining height and colour
 * `stroke_width` units defined in help files
 
-# mapdeck 0.2
+# v0.2
 
 * different palettes for both stroke & fill options
 * `stroke_colour` fix for polygons
