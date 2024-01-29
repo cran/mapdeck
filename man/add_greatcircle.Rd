@@ -28,7 +28,9 @@ add_greatcircle(
   update_view = TRUE,
   focus_layer = FALSE,
   transitions = NULL,
-  digits = 6
+  digits = 6,
+  brush_radius = NULL,
+  ...
 )
 }
 \arguments{
@@ -98,6 +100,12 @@ palette for different colour options (where available),
 \item{transitions}{list specifying the duration of transitions.}
 
 \item{digits}{number of digits for rounding coordinates}
+
+\item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
+the arcs will only show if the origin or destination are within the radius of the mouse.
+If NULL, all arcs are displayed}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 Renders flat arcs along the great circle joining pairs

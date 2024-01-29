@@ -105,8 +105,13 @@ add_pointcloud <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_pointcloud( map, layer_id, ...) )
+	}
 
 	## using binary data requires hex-colorus to include teh alpha
 	if( !is.null( fill_colour ) ) {
@@ -204,8 +209,8 @@ add_pointcloud <- function(
 
 #' @rdname clear
 #' @export
-clear_pointcloud <- function( map, layer_id = NULL) {
+clear_pointcloud <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId( layer_id, "pointcloud" )
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "pointcloud" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "pointcloud", update_view, clear_legend )
 }
 

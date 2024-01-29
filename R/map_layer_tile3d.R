@@ -1,9 +1,9 @@
 mapdeckLoader3dTilesDependency <- function() {
 	list(
-		## https://unpkg.com/@loaders.gl/3d-tiles@2.2.3/dist/dist.min.js
+		## https://unpkg.com/@loaders.gl/3d-tiles@latest/dist/dist.min.js
 		createHtmlDependency(
 			name = "loader_3dtiles",
-			version = "2.2.3",
+			version = "3.4.11",
 			src = system.file("htmlwidgets/lib/", package = "mapdeck"),
 			script = c("loader_3dtiles.min.js"),
 			all_files =  FALSE
@@ -11,12 +11,12 @@ mapdeckLoader3dTilesDependency <- function() {
 	)
 }
 
+## https://unpkg.com/@loaders.gl/i3s@latest/dist/dist.min.js
 mapdeckLoaderIS3Dependency <- function() {
 	list(
-		## https://unpkg.com/@loaders.gl/i3s@2.2.3/dist/dist.min.js
 		createHtmlDependency(
 			name = "loader_i3s",
-			version = "2.2.3",
+			version = "3.4.11",
 			src = system.file("htmlwidgets/lib/", package = "mapdeck"),
 			script = c("loader_i3s.min.js"),
 			all_files =  FALSE
@@ -40,7 +40,7 @@ mapdeckTile3DDependency <- function() {
 #' Add Cesium
 #'
 #' Renders 3D tiles data from Cesium ION assets. To use this layer you need a
-#' Cesium ION account \url{https://cesium.com/docs/tutorials/getting-started/#your-first-app}.
+#' Cesium ION account \url{https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/#your-first-app}.
 #' This layer is experimental
 #'
 #' @inheritParams add_pointcloud
@@ -53,7 +53,7 @@ mapdeckTile3DDependency <- function() {
 #' ## Melbourne point cloud
 #' ion_asset <- 43978
 #' ion_token <- "ION_TOKEN"
-#' tile_data <- paste0("https://assets.cesium.com/",ion_asset,"/tileset.json")
+#' tile_data <- paste0("https://assets.ion.cesium.com/",ion_asset,"/tileset.json")
 #'
 #' mapdeck(
 #'   location = c(144.95, -37.82)

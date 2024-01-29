@@ -5,9 +5,9 @@
 
 [![R build
 status](https://github.com/SymbolixAU/mapdeck/workflows/R-CMD-check/badge.svg)](https://github.com/SymbolixAU/mapdeck/actions)
-[![Codecov test
-coverage](https://codecov.io/gh/symbolixau/mapdeck/branch/master/graph/badge.svg)](https://codecov.io/gh/symbolixau/mapdeck?branch=master)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/mapdeck)](https://CRAN.R-project.org/package=mapdeck)
+\[![Codecov test
+coverage](https://app.codecov.io/gh/symbolixau/mapdeck?branch=master)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/mapdeck)](https://CRAN.R-project.org/package=mapdeck)
 ![downloads](http://cranlogs.r-pkg.org/badges/grand-total/mapdeck)
 [![CRAN RStudio mirror
 downloads](http://cranlogs.r-pkg.org/badges/mapdeck)](https://CRAN.R-project.org/package=mapdeck)
@@ -29,14 +29,14 @@ browser can handle), on interactive maps using Mapbox GL and Deck.gl
 > We provide building blocks to add location features like maps, search,
 > and navigation into any experience you create.
 
-  - <https://www.mapbox.com/about/>
+- <https://www.mapbox.com/about/company>
 
 ## What is deck.gl?
 
 > deck.gl is a WebGL-powered framework for visual exploratory data
 > analysis of large datasets.
 
-  - <https://deck.gl/#/>
+- <https://deck.gl/#/>
 
 ## How do I use it?
 
@@ -49,7 +49,16 @@ install.packages("mapdeck")
 Or from github (to get the latest development version)
 
 ``` r
-devtools::install_github("SymbolixAU/mapdeck")
+remotes::install_github("SymbolixAU/mapdeck")
+```
+
+If the github version fails to install, you’ll probably need to update
+dependencies first
+
+``` r
+remotes::install_github("dcooley/geometries")
+remotes::install_github("dcooley/sfheaders")
+remotes::install_github("SymbolixAU/spatialwidget")
 ```
 
 Then everything you need to know to get you started is on the [home
@@ -83,7 +92,10 @@ mapdeck(token = key, style = mapdeck_style('dark')) %>%
   )
 ```
 
-![Arcs](./vignettes/img/readme_arcs_small.gif)
+<figure>
+<img src="./vignettes/img/readme_arcs_small.gif" alt="Arcs" />
+<figcaption aria-hidden="true">Arcs</figcaption>
+</figure>
 
 See the
 [Layers](https://symbolixau.github.io/mapdeck/articles/layers.html) page
@@ -100,4 +112,4 @@ tracker](https://github.com/SymbolixAU/mapdeck/issues) on github.
 
 I don’t respond to emails asking for help because this is an open source
 package, and any advice should be kept open so everyone can benefit.
-(unless you want to pay me\!)
+(unless you want to pay me!)

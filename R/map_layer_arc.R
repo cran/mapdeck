@@ -60,6 +60,7 @@ mapdeckArcDependency <- function() {
 #' @param brush_radius radius of the brush in metres. Default NULL. If supplied,
 #' the arcs will only show if the origin or destination are within the radius of the mouse.
 #' If NULL, all arcs are displayed
+#' @param ... \code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions
 #' @param digits number of digits for rounding coordinates
 #'
 #' @section data:
@@ -261,8 +262,13 @@ add_arc <- function(
 	focus_layer = FALSE,
 	transitions = NULL,
 	digits = 6,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_arc( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["origin"]] <- force(origin)
@@ -349,8 +355,10 @@ add_arc <- function(
 #' @rdname clear
 #' @param map a mapdeck map object
 #' @param layer_id the layer_id of the layer you want to clear
+#' @param clear_legend logical indicating if the legend should be removed
+#' @param update_view logical indicating if the map should update the bounds after removing the layer
 #' @export
-clear_arc <- function( map, layer_id = NULL ) {
+clear_arc <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "arc")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "arc" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "arc", update_view, clear_legend )
 }

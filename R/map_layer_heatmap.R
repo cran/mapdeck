@@ -112,10 +112,13 @@ add_heatmap <- function(
 	update_view = TRUE,
 	focus_layer = FALSE,
 	digits = 6,
-	transitions = NULL
+	transitions = NULL,
+	...
 ) {
 
-	#experimental_layer("heatmap")
+	if( nrow( data ) == 0 ) {
+		return( clear_heatmap( map, layer_id, ...) )
+	}
 
 	l <- list()
 	l[["polyline"]] <- force( polyline )
@@ -182,7 +185,7 @@ add_heatmap <- function(
 
 #' @rdname clear
 #' @export
-clear_heatmap <- function( map, layer_id = NULL) {
+clear_heatmap <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)  {
 	layer_id <- layerId(layer_id, "heatmap")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "heatmap" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "heatmap", update_view, clear_legend )
 }

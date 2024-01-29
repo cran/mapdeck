@@ -2,11 +2,11 @@
 % Please edit documentation in R/map_layer_animated_arc.R,
 %   R/map_layer_animated_line.R, R/map_layer_arc.R, R/map_layer_bitmap.R,
 %   R/map_layer_column.R, R/map_layer_geojson.R, R/map_layer_greatcircle.R,
-%   R/map_layer_grid.R, R/map_layer_heatmap.R, R/map_layer_hexagon.R,
-%   R/map_layer_line.R, R/map_layer_mesh.R, R/map_layer_path.R,
-%   R/map_layer_pointcloud.R, R/map_layer_polygon.R, R/map_layer_scatterplot.R,
-%   R/map_layer_screengrid.R, R/map_layer_terrain.R, R/map_layer_text.R,
-%   R/map_layer_title.R, R/map_layer_trips.R
+%   R/map_layer_grid.R, R/map_layer_h3.R, R/map_layer_heatmap.R,
+%   R/map_layer_hexagon.R, R/map_layer_line.R, R/map_layer_mesh.R,
+%   R/map_layer_path.R, R/map_layer_pointcloud.R, R/map_layer_polygon.R,
+%   R/map_layer_scatterplot.R, R/map_layer_screengrid.R, R/map_layer_terrain.R,
+%   R/map_layer_text.R, R/map_layer_title.R, R/map_layer_trips.R
 \name{clear_animated_arc}
 \alias{clear_animated_arc}
 \alias{clear_line}
@@ -16,6 +16,7 @@
 \alias{clear_geojson}
 \alias{clear_greatcircle}
 \alias{clear_grid}
+\alias{clear_h3_hexagon}
 \alias{clear_heatmap}
 \alias{clear_hexagon}
 \alias{clear_mesh}
@@ -30,52 +31,68 @@
 \alias{clear_trips}
 \title{Clear Animated Arc}
 \usage{
-clear_animated_arc(map, layer_id = NULL)
+clear_animated_arc(map, layer_id = NULL, update_view = TRUE)
 
-clear_line(map, layer_id = NULL)
+clear_line(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_arc(map, layer_id = NULL)
+clear_arc(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_bitmap(map, layer_id = NULL)
+clear_bitmap(map, layer_id = NULL, update_view = TRUE)
 
-clear_column(map, layer_id = NULL)
+clear_column(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_geojson(map, layer_id = NULL)
+clear_geojson(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_greatcircle(map, layer_id = NULL)
+clear_greatcircle(
+  map,
+  layer_id = NULL,
+  update_view = TRUE,
+  clear_legend = TRUE
+)
 
-clear_grid(map, layer_id = NULL)
+clear_grid(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_heatmap(map, layer_id = NULL)
+clear_h3_hexagon(map, layer_id = NULL)
 
-clear_hexagon(map, layer_id = NULL)
+clear_heatmap(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_line(map, layer_id = NULL)
+clear_hexagon(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_mesh(map, layer_id = NULL)
+clear_line(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_path(map, layer_id = NULL)
+clear_mesh(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_pointcloud(map, layer_id = NULL)
+clear_path(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_polygon(map, layer_id = NULL)
+clear_pointcloud(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_scatterplot(map, layer_id = NULL)
+clear_polygon(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_screengrid(map, layer_id = NULL)
+clear_scatterplot(
+  map,
+  layer_id = NULL,
+  update_view = TRUE,
+  clear_legend = TRUE
+)
 
-clear_terrain(map, layer_id = NULL)
+clear_screengrid(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
-clear_text(map, layer_id = NULL)
+clear_terrain(map, layer_id = NULL, update_view = TRUE)
+
+clear_text(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 
 clear_title(map, layer_id = NULL)
 
-clear_trips(map, layer_id = NULL)
+clear_trips(map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE)
 }
 \arguments{
 \item{map}{a mapdeck map object}
 
 \item{layer_id}{the layer_id of the layer you want to clear}
+
+\item{update_view}{logical indicating if the map should update the bounds after removing the layer}
+
+\item{clear_legend}{logical indicating if the legend should be removed}
 }
 \description{
 Clears elements from a map

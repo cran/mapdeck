@@ -18,7 +18,8 @@ add_screengrid(
   layer_id = NULL,
   update_view = TRUE,
   focus_layer = FALSE,
-  digits = 6
+  digits = 6,
+  ...
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ to conflict and not plot correctly}
 \item{focus_layer}{logical indicating if the map should update the bounds to only include this layer}
 
 \item{digits}{number of digits for rounding coordinates}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Screen Grid Layer takes in an array of latitude and longitude coordinated points,

@@ -27,7 +27,7 @@ add_geojson(
   highlight_colour = "#AAFFFFFF",
   palette = "viridis",
   na_colour = "#808080FF",
-  line_width_units = c("metres", "pixels"),
+  line_width_units = c("meters", "pixels"),
   line_width_scale = 1,
   line_width_min_pixels = 0,
   elevation_scale = 1,
@@ -36,7 +36,8 @@ add_geojson(
   update_view = TRUE,
   focus_layer = FALSE,
   digits = 6,
-  transitions = NULL
+  transitions = NULL,
+  ...
 )
 }
 \arguments{
@@ -118,6 +119,8 @@ all polygon elevation without updating the data}
 \item{digits}{number of digits for rounding coordinates}
 
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The GeoJson Layer takes in GeoJson formatted data and renders it as interactive polygons,
@@ -299,6 +302,7 @@ mapdeck(
 ) \%>\%
  add_geojson(
    data = geo
+   , extruded = TRUE ## required to show elevated polygons
  )
 
 }

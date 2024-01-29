@@ -110,9 +110,13 @@ add_column <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
 
+	if( nrow( data ) == 0 ) {
+		return( clear_column( map, layer_id, ... ) )
+	}
 	## using binary data requires hex-colorus to include teh alpha
 	if( !is.null( fill_colour ) ) {
 		fill_colour <- appendAlpha( fill_colour )
@@ -225,7 +229,7 @@ add_column <- function(
 
 #' @rdname clear
 #' @export
-clear_column <- function( map, layer_id = NULL) {
+clear_column <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "column")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "column" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "column", update_view, clear_legend )
 }

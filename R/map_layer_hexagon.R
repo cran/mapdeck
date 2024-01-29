@@ -22,7 +22,7 @@ mapdeckHexagonDependency <- function() {
 #' @param lat column containing latitude values
 #' @param polyline column of \code{data} containing the polylines
 #' @param radius in metres. Default 1000
-#' @param elevation_scale value to sacle the elevations of the hexagons. Default 1
+#' @param elevation_scale value to scale the elevations of the hexagons. Default 1
 #' @param colour_range vector of 6 hex colours
 #' @param elevation column containing the elevation of the value.
 #' @param elevation_function one of 'min', 'mean', 'max', 'sum'.
@@ -155,8 +155,13 @@ add_hexagon <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_hexagon( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["polyline"]] <- force( polyline )
@@ -238,7 +243,7 @@ add_hexagon <- function(
 
 #' @rdname clear
 #' @export
-clear_hexagon <- function( map, layer_id = NULL) {
+clear_hexagon <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "hexagon")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "hexagon" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "hexagon", update_view, clear_legend )
 }

@@ -190,6 +190,7 @@ mapdeckGeojsonDependency <- function() {
 #' ) %>%
 #'  add_geojson(
 #'    data = geo
+#'    , extruded = TRUE ## required to show elevated polygons
 #'  )
 #'
 #' }
@@ -219,7 +220,7 @@ add_geojson <- function(
 	highlight_colour = "#AAFFFFFF",
 	palette = "viridis",
 	na_colour = "#808080FF",
-	line_width_units = c("metres", "pixels"),
+	line_width_units = c("meters", "pixels"),
 	line_width_scale = 1,
 	line_width_min_pixels = 0,
 	elevation_scale = 1,
@@ -228,10 +229,14 @@ add_geojson <- function(
 	update_view = TRUE,
 	focus_layer = FALSE,
 	digits = 6,
-	transitions = NULL
+	transitions = NULL,
+	...
 	) {
 
 	l <- list()
+
+	line_width_units <- match.arg(line_width_units)
+
 	l[["stroke_colour"]] <- force( stroke_colour )
 	l[["stroke_opacity"]] <- force( stroke_opacity )
 	l[["stroke_width"]] <- force( stroke_width )
@@ -290,6 +295,11 @@ add_geojson <- function(
 	l[["data_type"]] <- NULL
 
 	if( tp == "sf" ) {
+
+		if( nrow( data ) == 0 ) {
+			return( clear_geojson( map, layer_id, ...) )
+		}
+
 	  shape <- rcpp_geojson_geojson( data, l, "geometry", digits)
 	  jsfunc <- "add_geojson_sf"
 	} else if ( tp == "geojson" ) {
@@ -320,7 +330,7 @@ add_geojson <- function(
 
 #' @rdname clear
 #' @export
-clear_geojson <- function( map, layer_id = NULL) {
+clear_geojson <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "geojson")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "geojson" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "geojson", update_view, clear_legend )
 }

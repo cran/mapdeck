@@ -14,7 +14,7 @@ add_path(
   dash_size = NULL,
   dash_gap = NULL,
   offset = NULL,
-  width_units = c("meters", "pixels"),
+  width_units = c("meters", "common", "pixels"),
   width_min_pixels = NULL,
   width_max_pixels = NULL,
   width_scale = 1,
@@ -33,7 +33,8 @@ add_path(
   focus_layer = FALSE,
   digits = 6,
   transitions = NULL,
-  brush_radius = NULL
+  brush_radius = NULL,
+  ...
 )
 }
 \arguments{
@@ -63,7 +64,7 @@ colour, this argument is ignored and you should include the alpha on the hex str
 Negative offset is to the left hand side, and positive offset is to the right hand side.
 0 extrudes the path so that it is centered at the specified coordinates.}
 
-\item{width_units}{The units of the line width, one of 'meters', 'pixels'.
+\item{width_units}{The units of the line width, one of 'meters', 'common' or 'pixels'.
 When zooming in and out, meter sizes scale with the base map, and pixel sizes
 remain the same on screen.}
 
@@ -116,6 +117,8 @@ a named list indicating which colour attributes should be included in the legend
 \item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
 the arcs will only show if the origin or destination are within the radius of the mouse.
 If NULL, all arcs are displayed}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Path Layer takes in lists of coordinate points and renders them as
@@ -140,6 +143,15 @@ path = 0,
 stroke_colour = 0,
 stroke_width = 0
 )
+}
+
+\section{gradient fill}{
+
+
+If a colour is supplied for each coordinate (see examples), the colour along each segment
+of the line is gradient-filled. However, if either \code{dash_gap}, \code{dash_size} or
+\code{offset} are supplied the the segment is filled with a solid colour, accoding to the
+first point on the segment.
 }
 
 \section{data}{
@@ -197,16 +209,100 @@ set_token( key )
 
 mapdeck(
   style = mapdeck_style("dark")
-  , location = c(145, -37.8)
-  , zoom = 10) \%>\%
+  ) \%>\%
   add_path(
     data = roads
     , stroke_colour = "RIGHT_LOC"
+    , stroke_width = 20
     , layer_id = "path_layer"
     , tooltip = "ROAD_NAME"
     , auto_highlight = TRUE
     , legend = TRUE
   )
+
+## Dashed lines
+mapdeck(
+  style = mapdeck_style("dark")
+  ) \%>\%
+  add_path(
+    data = roads
+    , stroke_colour = "RIGHT_LOC"
+    , layer_id = "path_layer"
+    , tooltip = "ROAD_NAME"
+    , stroke_width = 1
+    , dash_size = 0.5
+    , dash_gap = 5
+  )
+
+## Different dashes per path
+
+sf <- mapdeck::roads
+sf$dash_size <- sample(1:5, size = nrow( sf ), replace = TRUE )
+sf$dash_gap <- sample(1:5, size = nrow( sf ), replace = TRUE )
+
+mapdeck(
+  style = mapdeck_style("dark")
+  ) \%>\%
+  add_path(
+    data = sf
+    , stroke_colour = "RIGHT_LOC"
+    , layer_id = "path_layer"
+    , tooltip = "ROAD_NAME"
+    , dash_size = "dash_size"
+    , dash_gap = "dash_gap"
+  )
+
+## Offset lines
+sf <- mapdeck::roads
+sf$offset <- sample(-10:10, size = nrow( sf ), replace = TRUE )
+
+mapdeck(
+  style = mapdeck_style("light")
+) \%>\%
+	add_path(
+   data = sf
+   , stroke_colour = "ROAD_NAME"
+   , offset = "offset"
+ )
+
+## Multi Coloured line
+## You need to supply one colour per coordinate in the sf object
+sf_line <- sfheaders::sf_linestring(
+  obj = data.frame(
+  id = c(1,1,1,1,1,2,2,2,2,2)
+  , x = c(0,0,1,1,2,-1,-1,0,0,1)
+  , y = c(0,1,1,2,2,0,1,1,2,2)
+  , col = c(1,2,3,4,5,5,4,3,2,1)
+ )
+ , x = "x"
+ , y = "y"
+ , linestring_id = "id"
+ , list_columns = "col"
+ , keep = TRUE
+)
+
+mapdeck(
+ style = mapdeck_style("light")
+) \%>\%
+ add_path(
+   data = sf_line
+   , stroke_colour = "col"
+   , stroke_width = 50000
+)
+
+## If using dashed lines, colours won't be gradient-filled
+mapdeck(
+ style = mapdeck_style("light")
+) \%>\%
+ add_path(
+   data = sf_line
+   , stroke_colour = "col"
+   , stroke_width = 500
+   , dash_size = 10
+   , dash_gap = 10
+ )
+
+
 }
 
 }

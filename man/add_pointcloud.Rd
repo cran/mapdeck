@@ -29,7 +29,8 @@ add_pointcloud(
   focus_layer = FALSE,
   digits = 6,
   transitions = NULL,
-  brush_radius = NULL
+  brush_radius = NULL,
+  ...
 )
 }
 \arguments{
@@ -96,6 +97,8 @@ a named list indicating which colour attributes should be included in the legend
 \item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
 the arcs will only show if the origin or destination are within the radius of the mouse.
 If NULL, all arcs are displayed}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Pointcloud Layer takes in coordinate points and renders them as circles

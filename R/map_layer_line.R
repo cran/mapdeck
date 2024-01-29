@@ -118,8 +118,13 @@ add_line <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_line( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["origin"]] <- force( origin )
@@ -188,8 +193,8 @@ add_line <- function(
 
 #' @rdname clear
 #' @export
-clear_line <- function( map, layer_id = NULL) {
+clear_line <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "line")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "line" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "line", update_view, clear_legend )
 }
 

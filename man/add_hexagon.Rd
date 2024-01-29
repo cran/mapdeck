@@ -26,7 +26,8 @@ add_hexagon(
   focus_layer = FALSE,
   digits = 6,
   transitions = NULL,
-  brush_radius = NULL
+  brush_radius = NULL,
+  ...
 )
 }
 \arguments{
@@ -61,7 +62,7 @@ If supplied it specifies how the colour values are calculated. Defaults to sum.}
 
 \item{legend_options}{A list of options for controlling the legend.}
 
-\item{elevation_scale}{value to sacle the elevations of the hexagons. Default 1}
+\item{elevation_scale}{value to scale the elevations of the hexagons. Default 1}
 
 \item{auto_highlight}{logical indicating if the shape under the mouse should auto-highlight}
 
@@ -80,6 +81,8 @@ If supplied it specifies how the colour values are calculated. Defaults to sum.}
 \item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
 the arcs will only show if the origin or destination are within the radius of the mouse.
 If NULL, all arcs are displayed}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Hexagon Layer renders a hexagon heatmap based on an array of points.

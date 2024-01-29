@@ -30,7 +30,8 @@ add_arc(
   focus_layer = FALSE,
   transitions = NULL,
   digits = 6,
-  brush_radius = NULL
+  brush_radius = NULL,
+  ...
 )
 }
 \arguments{
@@ -105,6 +106,8 @@ palette for different colour options (where available),
 \item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
 the arcs will only show if the origin or destination are within the radius of the mouse.
 If NULL, all arcs are displayed}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Arc Layer renders raised arcs joining pairs of source and target coordinates

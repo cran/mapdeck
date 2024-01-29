@@ -19,6 +19,8 @@
 #' @param max_pitch sets the maximum pitch
 #' @param min_pitch sets the minimum pitch
 #' @param location unnamed vector of lon and lat coordinates (in that order)
+#' @param libraries additional libraries required by some layers. Currently
+#' 'h3' is required for \link{add_h3}.
 #' @param show_view_state logical, indicating whether to add the current View State to the map.
 #' When \code{TRUE}, the following is added as an overlay to the map
 #' \itemize{
@@ -56,6 +58,7 @@ mapdeck <- function(
 	pitch = 0,
 	zoom = 0,
 	bearing = 0,
+	libraries = NULL,
 	max_zoom = 20,
 	min_zoom = 0,
 	max_pitch = 60,
@@ -110,10 +113,11 @@ mapdeck <- function(
   )
 
   mapdeckmap <- add_dependencies( mapdeckmap )
+
   mapdeckmap$dependencies <- c(
-  	mapdeckmap$dependencies
+  	if ('h3' %in% libraries) mapdeckH3JSDependency() else NULL
+  	, mapdeckmap$dependencies
   	, mapboxgl()
-  	, mapdeck_css()
   	, mapdeck_js()
   	, htmlwidgets_js()
   	#, mapdeckViewStateDependency()

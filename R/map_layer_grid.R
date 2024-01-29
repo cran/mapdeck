@@ -123,8 +123,13 @@ add_grid <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_grid( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["lon"]] <- force( lon )
@@ -186,21 +191,10 @@ add_grid <- function(
 	l[["data_type"]] <- NULL
 
 	jsfunc <- "add_grid_geo"
-
 	if ( tp == "sf" ) {
-
-		# geometry_column <- list( geometry = c("lon","lat") )  ## using columnar structure, the 'sf' is converted to a data.frame
-		## so the geometry columns are obtained after sfheaders::sf_to_df()
-		# l[["geometry"]] <- NULL
-		# shape <- rcpp_point_sf_columnar( data, l, geometry_column, digits, "grid" )
-
 	  geometry_column <- c( "geometry" )
 	  shape <- rcpp_aggregate_geojson( data, l, geometry_column, digits, "grid" )
 	} else if ( tp == "df" ) {
-
-		# geometry_column <- list( geometry = c("lon", "lat") )
-		# shape <- rcpp_point_df_columnar( data, l, geometry_column, digits, "grid" )
-
 		geometry_column <- list( geometry = c("lon", "lat") )
 		shape <- rcpp_aggregate_geojson_df( data, l, geometry_column, digits, "grid" )
 	} else if ( tp == "sfencoded" ) {
@@ -223,7 +217,7 @@ add_grid <- function(
 
 #' @rdname clear
 #' @export
-clear_grid <- function( map, layer_id = NULL) {
+clear_grid <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE ) {
 	layer_id <- layerId(layer_id, "grid")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "grid" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "grid", update_view, clear_legend )
 }

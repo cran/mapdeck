@@ -19,7 +19,8 @@ add_heatmap(
   update_view = TRUE,
   focus_layer = FALSE,
   digits = 6,
-  transitions = NULL
+  transitions = NULL,
+  ...
 )
 }
 \arguments{
@@ -63,6 +64,8 @@ to conflict and not plot correctly}
 \item{digits}{number of digits for rounding coordinates}
 
 \item{transitions}{list specifying the duration of transitions.}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Heatmap Layer can be used to visualise spatial distribution of data.

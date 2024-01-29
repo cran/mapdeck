@@ -22,7 +22,7 @@ to conflict and not plot correctly}
 }
 \description{
 Renders 3D tiles data from Cesium ION assets. To use this layer you need a
-Cesium ION account \url{https://cesium.com/docs/tutorials/getting-started/#your-first-app}.
+Cesium ION account \url{https://cesium.com/learn/cesiumjs-learn/cesiumjs-quickstart/#your-first-app}.
 This layer is experimental
 }
 \examples{
@@ -31,7 +31,7 @@ This layer is experimental
 ## Melbourne point cloud
 ion_asset <- 43978
 ion_token <- "ION_TOKEN"
-tile_data <- paste0("https://assets.cesium.com/",ion_asset,"/tileset.json")
+tile_data <- paste0("https://assets.ion.cesium.com/",ion_asset,"/tileset.json")
 
 mapdeck(
   location = c(144.95, -37.82)

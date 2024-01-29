@@ -135,10 +135,13 @@ add_polygon <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	...
 ) {
 
-	#if( is.null( stroke_colour )) stroke_colour <- fill_colour
+	if( nrow( data ) == 0 ) {
+		return( clear_polygon( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["polyline"]] <- force( polyline )
@@ -231,9 +234,9 @@ add_polygon <- function(
 
 #' @rdname clear
 #' @export
-clear_polygon <- function( map, layer_id = NULL) {
+clear_polygon <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "polygon")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "polygon" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "polygon", update_view, clear_legend )
 }
 
 

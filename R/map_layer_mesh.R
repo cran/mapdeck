@@ -39,7 +39,7 @@ find_mesh_index <- function( data ) {
 #' m <- melbourne_mesh
 #' m$vb[3, ] <- m$vb[3, ] * 50
 #'
-#'mapdeck() %>%
+#' mapdeck() %>%
 #'  add_mesh(
 #'  data = m
 #'  )
@@ -74,7 +74,10 @@ add_mesh <- function(
 	brush_radius = NULL
 ) {
 
-	#if( is.null( stroke_colour )) stroke_colour <- fill_colour
+	if( length( data ) == 0 ) {
+		return( clear_mesh( map = map, layer_id = layer_id, update_view = update_view, clear_legend = clear_legend ) )
+	}
+
 	experimental_layer( "mesh" )
 
 	if(!inherits(data, "mesh3d")) {
@@ -175,7 +178,6 @@ add_mesh <- function(
 		js_transitions, is_extruded, brush_radius
 	)
 }
-
 
 
 # add_mesh2 <- function(
@@ -304,12 +306,11 @@ add_mesh <- function(
 
 
 
-
 #' @rdname clear
 #' @export
-clear_mesh <- function( map, layer_id = NULL) {
+clear_mesh <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE ) {
 	layer_id <- layerId(layer_id, "mesh")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "mesh" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "mesh", update_view, clear_legend )
 }
 
 

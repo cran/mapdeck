@@ -32,7 +32,9 @@ add_scatterplot(
   update_view = TRUE,
   focus_layer = FALSE,
   transitions = NULL,
-  brush_radius = NULL
+  brush_radius = NULL,
+  collision_filter = FALSE,
+  ...
 )
 }
 \arguments{
@@ -113,6 +115,11 @@ a named list indicating which colour attributes should be included in the legend
 \item{brush_radius}{radius of the brush in metres. Default NULL. If supplied,
 the arcs will only show if the origin or destination are within the radius of the mouse.
 If NULL, all arcs are displayed}
+
+\item{collision_filter}{set to `TRUE` if you want to hide features that overlap
+other features. Default is `FALSE`}
+
+\item{...}{\code{clear_legend} and \code{clear_view} arguments passed to 'clear_()' functions}
 }
 \description{
 The Scatterplot Layer takes in coordinate points and renders them as circles

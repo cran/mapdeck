@@ -14,6 +14,7 @@ mapdeck(
   pitch = 0,
   zoom = 0,
   bearing = 0,
+  libraries = NULL,
   max_zoom = 20,
   min_zoom = 0,
   max_pitch = 60,
@@ -44,6 +45,9 @@ If left empty layers will still be plotted, but without a Mapbox map.}
 \item{zoom}{zoom level of the map}
 
 \item{bearing}{bearing of the map between 0 and 360}
+
+\item{libraries}{additional libraries required by some layers. Currently
+'h3' is required for \link{add_h3}.}
 
 \item{max_zoom}{sets the maximum zoom level}
 

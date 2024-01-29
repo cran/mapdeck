@@ -88,8 +88,14 @@ add_screengrid <- function(
 	layer_id = NULL,
 	update_view = TRUE,
 	focus_layer = FALSE,
-	digits = 6
+	digits = 6,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_screengrid( map, layer_id, ... ) )
+	}
+
 	brush_radius = NULL
 	l <- list()
 	l[["polyline"]] <- force( polyline )
@@ -159,8 +165,8 @@ add_screengrid <- function(
 
 #' @rdname clear
 #' @export
-clear_screengrid <- function( map, layer_id = NULL) {
+clear_screengrid <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE ) {
 	layer_id <- layerId(layer_id, "screengrid")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "screengrid" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "screengrid", update_view, clear_legend )
 }
 

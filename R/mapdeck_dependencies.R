@@ -18,13 +18,13 @@ createHtmlDependency <- function(name, version, src, script = NULL, stylesheet =
 }
 
 
-addDependency <- function(map, dependencyFunction) {
+addDependency <- function(map, dependencyFunction, priority = FALSE) {
 
 	existingDeps <- sapply(map$dependencies, function(x) x[['name']])
 	addingDependency <- sapply(dependencyFunction, function(x) x[['name']])
 
 	if(!addingDependency %in% existingDeps)
-		map$dependencies <- c(map$dependencies, dependencyFunction)
+		map$dependencies <- if(priority) c(dependencyFunction, map$dependencies) else c(map$dependencies, dependencyFunction)
 
 	return(map)
 }
@@ -80,6 +80,7 @@ mapdeck_dependencies <- function() {
 		, mapdeck_dep_location()
 		, mapdeck_dep_colours()
 		, mapdeck_dep_coordinates()
+		, mapdeck_css()
 		)
 }
 
@@ -160,7 +161,7 @@ deckgl_min_js <- function() {
 	list(
 		createHtmlDependency(
 			name = "deckgl",
-			version = "8.1.6",
+			version = "8.9.33",
 			src = system.file("htmlwidgets/lib/", package = "mapdeck"),
 			script = c("deckgl.min.js"),
 			all_files = FALSE
@@ -168,13 +169,13 @@ deckgl_min_js <- function() {
 	)
 }
 
-## https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.js
-## https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.css
+## https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.js
+## https://api.mapbox.com/mapbox-gl-js/v1.13.0/mapbox-gl.css
 mapboxgl <- function() {
 	list(
 		createHtmlDependency(
 			name = "mapboxgl",
-			version = "1.10.0",
+			version = "1.13.0",
 			src = system.file("htmlwidgets/lib/", package = "mapdeck"),
 			script = c("mapbox-gl.js"),
 			stylesheet = c("mapbox-gl.css"),

@@ -24,6 +24,8 @@ mapdeckScatterplotDependency <- function() {
 #' small for the given zoom level
 #' @param radius_max_pixels the maximum radius in pixels. Can prevent the circle from
 #' getting too big when zoomed in
+#' @param collision_filter set to `TRUE` if you want to hide features that overlap
+#' other features. Default is `FALSE`
 #'
 #' @inheritSection add_polygon data
 #' @inheritSection add_arc legend
@@ -143,8 +145,14 @@ add_scatterplot <- function(
 	update_view = TRUE,
 	focus_layer = FALSE,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	collision_filter = FALSE,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_scatterplot( map, layer_id, ... ) )
+	}
 
 	## using binary data requires hex-colorus to include teh alpha
 	if( !is.null( fill_colour ) ) {
@@ -182,6 +190,8 @@ add_scatterplot <- function(
 		l[["data"]] <- NULL
 	}
 
+	# print( data )
+
 	if( !is.null(l[["bbox"]] ) ) {
 		bbox <- l[["bbox"]]
 		l[["bbox"]] <- NULL
@@ -217,7 +227,6 @@ add_scatterplot <- function(
 
 	js_transitions <- resolve_transitions( transitions, "scatterplot" )
 
-
 	if( inherits( legend, "json" ) ) {
 		shape[["legend"]] <- legend
 		legend_format <- "hex"
@@ -229,13 +238,13 @@ add_scatterplot <- function(
 	invoke_method(
 		map, jsfunc, map_type( map ), shape[["data"]], nrow(data) , layer_id, auto_highlight, highlight_colour,
 		shape[["legend"]], legend_format, bbox, update_view, focus_layer, js_transitions,
-		radius_min_pixels, radius_max_pixels, brush_radius
+		radius_min_pixels, radius_max_pixels, brush_radius, collision_filter
 		)
 }
 
 #' @rdname clear
 #' @export
-clear_scatterplot <- function( map, layer_id = NULL) {
+clear_scatterplot <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "scatterplot")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "scatterplot" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "scatterplot", update_view, clear_legend )
 }

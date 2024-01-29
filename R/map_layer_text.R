@@ -108,8 +108,14 @@ add_text <- function(
 	focus_layer = FALSE,
 	digits = 6,
 	transitions = NULL,
-	brush_radius = NULL
+	brush_radius = NULL,
+	collision_filter = FALSE,
+	...
 ) {
+
+	if( nrow( data ) == 0 ) {
+		return( clear_text( map, layer_id, ... ) )
+	}
 
 	l <- list()
 	l[["lon"]] <- force( lon )
@@ -180,14 +186,14 @@ add_text <- function(
 	invoke_method(
 		map, jsfunc, map_type( map ), shape[["data"]], layer_id, auto_highlight, highlight_colour,
 		shape[["legend"]], bbox, update_view, focus_layer, js_transitions, billboard,
-		font_family, font_weight, brush_radius
+		font_family, font_weight, brush_radius, collision_filter
 		)
 }
 
 #' @rdname clear
 #' @export
-clear_text <- function( map, layer_id = NULL) {
+clear_text <- function( map, layer_id = NULL, update_view = TRUE, clear_legend = TRUE) {
 	layer_id <- layerId(layer_id, "text")
-	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "text" )
+	invoke_method(map, "md_layer_clear", map_type( map ), layer_id, "text", update_view, clear_legend )
 }
 
