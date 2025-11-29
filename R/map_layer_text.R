@@ -17,6 +17,7 @@ mapdeckTextDependency <- function() {
 #'
 #' @inheritParams add_scatterplot
 #' @param text column of \code{data} containing the text. The data must be a character.
+#' @param elevation column of \code{data} containing the elevation of the text.
 #' @param size column of \code{data} containing the size of the text. Default 32
 #' @param angle column of \code{data} containging the angle of the text. Default 0
 #' @param anchor column of \code{data} containing the anchor of the text. One of
@@ -84,6 +85,7 @@ add_text <- function(
 	text,
 	lon = NULL,
 	lat = NULL,
+	elevation = NULL,
 	polyline = NULL,
 	fill_colour = NULL,
 	fill_opacity = NULL,
@@ -120,6 +122,7 @@ add_text <- function(
 	l <- list()
 	l[["lon"]] <- force( lon )
 	l[["lat"]] <- force( lat )
+	l[["elevation"]] <- force( elevation )
 	l[["fill_colour"]] <- force( fill_colour )
 	l[["fill_opacity"]] <- resolve_opacity( fill_opacity )
 	l[["size"]] <- force( size )
@@ -168,7 +171,7 @@ add_text <- function(
 		geometry_column <- c( "geometry" )
 		shape <- rcpp_text_geojson( data, l, geometry_column, digits )
 	} else if ( tp == "df" ) {
-		geometry_column <- list( geometry = c("lon", "lat") )
+		geometry_column <- list( geometry = c("lon", "lat", "elevation") )
 		shape <- rcpp_text_geojson_df( data, l, geometry_column, digits )
 	} else if ( tp == "sfencoded" ) {
 		geometry_column <- "polyline"

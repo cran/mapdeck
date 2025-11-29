@@ -23,7 +23,8 @@ test_that("add_polygon accepts multiple objects", {
 	sf <- sfheaders::sf_polygon( df, polygon_id = "polygon_id", linestring_id = "linestring_id", x = "x", y = "y")
 
 	p <- add_polygon(map = m, data = sf, digits = 7)
-	expect_equal( as.character( p$x$calls[[1]]$args[[2]] ), geo )
+	str <- as.character(p$x$calls[[1]]$args[[2]])
+	expect_equal( str, geo )
 
 	## TODO( these tests, because some characters are being escaped in the polyline)
 	## sfencoded

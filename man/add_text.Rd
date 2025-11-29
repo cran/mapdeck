@@ -10,6 +10,7 @@ add_text(
   text,
   lon = NULL,
   lat = NULL,
+  elevation = NULL,
   polyline = NULL,
   fill_colour = NULL,
   fill_opacity = NULL,
@@ -50,6 +51,8 @@ EPSG:4326 (WGS 84) coordinate system}
 \item{lon}{column containing longitude values}
 
 \item{lat}{column containing latitude values}
+
+\item{elevation}{column of \code{data} containing the elevation of the text.}
 
 \item{polyline}{optional column of \code{data} containing the polylines, if using encoded polylines}
 
